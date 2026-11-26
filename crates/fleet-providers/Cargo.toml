@@ -15,4 +15,3 @@ fleet-neural.workspace = true
 fleet-security.workspace = true
 fleet-swarm.workspace = true
 fleet-workflows.workspace = true
-fleet-federation.workspace = true

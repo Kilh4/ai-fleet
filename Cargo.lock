@@ -127,7 +127,6 @@ checksum = "1c66915cc5391097de7a2b0b972e8505aa33c0df401fd3a6811dbdb32881ba48"
 name = "fleet-agents"
 version = "3.0.0"
 dependencies = [
- "fleet-core",
  "serde",
  "serde_json",
 ]
@@ -138,7 +137,6 @@ version = "3.0.0"
 dependencies = [
  "chrono",
  "serde",
- "serde_json",
  "sha2",
 ]
 
@@ -176,7 +174,6 @@ name = "fleet-memory"
 version = "3.0.0"
 dependencies = [
  "chrono",
- "fleet-core",
  "serde",
  "serde_json",
  "sha2",
@@ -199,7 +196,6 @@ dependencies = [
  "chrono",
  "fleet-agents",
  "fleet-core",
- "fleet-federation",
  "fleet-memory",
  "fleet-neural",
  "fleet-security",
@@ -254,7 +250,6 @@ name = "fleet-workflows"
 version = "3.0.0"
 dependencies = [
  "chrono",
- "fleet-agents",
  "fleet-core",
  "serde",
  "serde_json",

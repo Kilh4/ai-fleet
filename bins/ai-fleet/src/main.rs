@@ -1,13 +1,13 @@
 //! `ai-fleet` v3.0 CLI — Unified Command Entrypoint for the 12-Crate Multi-AI Orchestrator.
 
 use chrono::Utc;
-use fleet_agents::{catalog_64_agents, find_best_persona};
+use fleet_agents::find_best_persona;
 use fleet_core::{
     append_ledger_row, detect_head_commit, detect_workspace_root, sha256_bytes, sha256_file, verify_ledger_chain,
     AiProvider, ModelSpec, SwarmTask,
 };
 use fleet_federation::{compute_gumbel_watermark_zscore, create_federated_packet};
-use fleet_mcp::{execute_mcp_tool, list_mcp_tools, run_mcp_stdio_server};
+use fleet_mcp::{execute_mcp_tool, run_mcp_stdio_server};
 use fleet_memory::{insert_hnsw_node, search_hnsw_semantic};
 use fleet_neural::{compress_message_to_token_budget, route_moe_experts};
 use fleet_providers::{
@@ -19,7 +19,7 @@ use fleet_swarm::{
 };
 use fleet_tui::{
     badge_effort, badge_status, badge_tier, enable_ansi_support, print_dashboard, render_float_bar, BOLD,
-    BRIGHT_CYAN, CYAN, GREEN, MAGENTA, RED, RESET, WHITE, YELLOW,
+    BRIGHT_CYAN, CYAN, GREEN, MAGENTA, RED, RESET, YELLOW,
 };
 use fleet_workflows::advance_sparc_phase;
 use serde_json::Value;

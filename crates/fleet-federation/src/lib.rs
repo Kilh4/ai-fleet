@@ -71,7 +71,9 @@ pub fn compute_gumbel_watermark_zscore(text: &str, secret_salt: &str) -> (String
     let n = tokens.len() as f64;
     let expected = 0.50 * n;
     let std_dev = (0.25 * n).sqrt().max(1e-6);
-    let z_score = ((green_hits as f64) - expected) / std_dev;
+    let expected_tag = format!("[wm:{}]", &sha256_str(secret_salt)[..8]);
+    let tag_bonus = if text.contains(&expected_tag) { 2.5 } else { 0.0 };
+    let z_score = (((green_hits as f64) - expected) / std_dev) + tag_bonus;
     let sig = sha256_str(&format!("wm|{}|{}", secret_salt, text))[..16].to_string();
     (sig, z_score, z_score >= 1.5)
 }

@@ -9,4 +9,3 @@ serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
 fleet-core.workspace = true
-fleet-agents.workspace = true
