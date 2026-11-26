@@ -1,0 +1,19 @@
+[package]
+name = "fleet-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+fleet-core.workspace = true
+fleet-agents.workspace = true
+fleet-memory.workspace = true
+fleet-neural.workspace = true
+fleet-security.workspace = true
+fleet-swarm.workspace = true
+fleet-workflows.workspace = true
+fleet-federation.workspace = true
+fleet-providers.workspace = true

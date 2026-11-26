@@ -1,7 +1,10 @@
-use chrono::DateTime;
-use serde::{Deserialize, Serialize};
+//! `fleet-security` — CASA Deterministic Authority Gate (ADR-380 §3),
+//! AIDefence Threat & Prompt-Injection Shield (ADR-118) with Hex/Base64 payload inspect,
+//! Guidance ContinueGate, and Cryptographic Truth Anchors.
 
-// ─── 1. CASA AUTHORITY ENVELOPE (ADR-380 §3 DENY-BY-DEFAULT) ───────────────
+use chrono::DateTime;
+use fleet_core::{sha256_str, TruthAnchor};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CasaEnvelope {
@@ -58,8 +61,6 @@ pub fn check_casa_authorization(envelope: &CasaEnvelope, requested_action: &str,
     }
 }
 
-// ─── 2. CONTINUE GATE (LONG-RUNNING AGENT CONTROL — GUIDANCE MODULE) ──────
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContinueGateMetrics {
     pub consecutive_steps: u32,
@@ -93,45 +94,22 @@ impl Default for ContinueGateMetrics {
 
 pub fn evaluate_continue_gate(m: &ContinueGateMetrics) -> (&'static str, String) {
     if m.coherence_score < m.min_coherence {
-        return (
-            "stop",
-            format!("Coherence degraded ({:.2} < {:.2}); halting agent to prevent drift", m.coherence_score, m.min_coherence),
-        );
+        return ("stop", format!("Coherence degraded ({:.2} < {:.2}); halting agent to prevent drift", m.coherence_score, m.min_coherence));
     }
     if m.uncertainty_score > m.max_uncertainty {
-        return (
-            "pause",
-            format!("Uncertainty too high ({:.2} > {:.2}); escalating effort & requesting review", m.uncertainty_score, m.max_uncertainty),
-        );
+        return ("pause", format!("Uncertainty too high ({:.2} > {:.2}); escalating effort & requesting review", m.uncertainty_score, m.max_uncertainty));
     }
     if m.rework_ratio > m.max_rework_ratio {
-        return (
-            "pause",
-            format!("Rework ratio exceeded ({:.2} > {:.2}); switching model via Q-Router", m.rework_ratio, m.max_rework_ratio),
-        );
+        return ("pause", format!("Rework ratio exceeded ({:.2} > {:.2}); switching model via Q-Router", m.rework_ratio, m.max_rework_ratio));
     }
     if m.budget_slope > m.max_budget_slope {
-        return (
-            "throttle",
-            format!("Quota burn slope high ({:.3}/step > {:.3}); throttling to conservation model", m.budget_slope, m.max_budget_slope),
-        );
+        return ("throttle", format!("Quota burn slope high ({:.3}/step > {:.3}); throttling to conservation model", m.budget_slope, m.max_budget_slope));
     }
     if m.consecutive_steps >= m.max_consecutive_steps {
-        return (
-            "checkpoint",
-            format!("Reached {} steps; forcing mandatory SHA-256 checkpoint", m.consecutive_steps),
-        );
+        return ("checkpoint", format!("Reached {} steps; forcing mandatory SHA-256 checkpoint", m.consecutive_steps));
     }
-    (
-        "continue",
-        format!(
-            "All 5 ContinueGate invariants healthy (coherence={:.2}, uncertainty={:.2}, rework={:.2})",
-            m.coherence_score, m.uncertainty_score, m.rework_ratio
-        ),
-    )
+    ("continue", format!("All 5 ContinueGate invariants healthy (coherence={:.2}, uncertainty={:.2}, rework={:.2})", m.coherence_score, m.uncertainty_score, m.rework_ratio))
 }
-
-// ─── 3. AIDEFENCE THREAT & PROMPT-INJECTION SHIELD (ADR-118) ──────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ThreatFinding {
@@ -145,17 +123,11 @@ pub fn scan_aidefence_threats(input: &str) -> Vec<ThreatFinding> {
     let low = input.to_lowercase();
     let mut findings = Vec::new();
 
-    let verbs = ["ignore", "disregard", "forget", "override", "bypass"];
+    // 1. ADR-118 0..6 word window between override verbs and target nouns (English & Arabic)
+    let verbs = ["ignore", "disregard", "forget", "override", "bypass", "تجاهل", "الغ", "انس"];
     let nouns = [
-        "instruction",
-        "instructions",
-        "prompt",
-        "prompts",
-        "rule",
-        "rules",
-        "context",
-        "constitution",
-        "system-prompt",
+        "instruction", "instructions", "prompt", "prompts", "rule", "rules",
+        "context", "constitution", "system-prompt", "التعليمات", "القواعد", "الدستور",
     ];
     let tokens: Vec<&str> = low.split_whitespace().collect();
     for (i, tok) in tokens.iter().enumerate() {
@@ -182,12 +154,16 @@ pub fn scan_aidefence_threats(input: &str) -> Vec<ThreatFinding> {
         }
     }
 
+    // 2. Role hijack / Jailbreak / Exfiltration markers
     let hijack_markers = [
         ("you are now", "role_switching", "HIGH", 0.88),
         ("act as a different", "role_switching", "HIGH", 0.85),
+        ("behave like", "role_switching", "HIGH", 0.84),
         ("developer mode", "jailbreak", "CRITICAL", 0.93),
         ("god mode", "jailbreak", "CRITICAL", 0.95),
         ("sudo mode", "jailbreak", "HIGH", 0.90),
+        ("curl http", "exfil_command", "HIGH", 0.89),
+        ("invoke-webrequest", "exfil_command", "HIGH", 0.89),
     ];
     for (pat, cat, sev, conf) in hijack_markers {
         if low.contains(pat) {
@@ -195,22 +171,41 @@ pub fn scan_aidefence_threats(input: &str) -> Vec<ThreatFinding> {
                 category: cat.into(),
                 severity: sev.into(),
                 confidence: conf,
-                description: format!("Detected adversarial role/jailbreak marker '{}'", pat),
+                description: format!("Detected adversarial marker '{}'", pat),
             });
         }
     }
 
-    let secret_prefixes = ["sk-ant-", "sk-proj-", "ghp_", "gho_", "aiza", "-----begin private key"];
+    // 3. Secret / API Key exfiltration detector
+    let secret_prefixes = ["sk-ant-", "sk-proj-", "ghp_", "gho_", "aiza", "-----begin private key", "postgres://postgres:"];
     for sp in secret_prefixes {
         if low.contains(sp) {
             findings.push(ThreatFinding {
                 category: "secret_exposure".into(),
                 severity: "CRITICAL".into(),
                 confidence: 0.99,
-                description: format!("Credential/private-key prefix '{}' detected in payload", sp),
+                description: format!("Credential/private-key pattern '{}' detected in payload", sp),
             });
         }
     }
 
     findings
+}
+
+pub fn default_truth_anchors() -> Vec<TruthAnchor> {
+    let invariants = [
+        ("ANCHOR-01", "Never activate paid API billing; strip all *_API_KEY env vars and enforce subscription-only logins.", "owner:constitution"),
+        ("ANCHOR-02", "Every code change is authored inside an isolated FencedLease git worktree and reviewed by a non-author AI.", "owner:constitution"),
+        ("ANCHOR-03", "Financial and critical domain migrations require xhigh/max reasoning effort and preflight verification.", "owner:constitution"),
+    ];
+    invariants
+        .iter()
+        .map(|(id, inv, auth)| TruthAnchor {
+            anchor_id: (*id).to_string(),
+            invariant: (*inv).to_string(),
+            source_authority: (*auth).to_string(),
+            signature_sha256: sha256_str(&format!("{}|{}|{}", id, inv, auth)),
+            immutable: true,
+        })
+        .collect()
 }

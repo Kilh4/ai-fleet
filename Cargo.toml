@@ -1,24 +1,40 @@
-[package]
-name = "ai-fleet"
-version = "2.0.0"
+[workspace]
+resolver = "2"
+members = [
+    "crates/fleet-core",
+    "crates/fleet-agents",
+    "crates/fleet-memory",
+    "crates/fleet-neural",
+    "crates/fleet-security",
+    "crates/fleet-swarm",
+    "crates/fleet-workflows",
+    "crates/fleet-federation",
+    "crates/fleet-providers",
+    "crates/fleet-mcp",
+    "crates/fleet-tui",
+    "bins/ai-fleet",
+]
+
+[workspace.package]
+version = "3.0.0"
 edition = "2021"
-authors = ["AI-Fleet Contributors"]
+authors = ["Abdulmalik Shabeel <apppbf@gmail.com>"]
 license = "MIT OR Apache-2.0"
-description = "Enterprise Multi-AI Swarm Orchestrator in Rust — 8-Expert MoE Router, Pheromone Scheduling, Q-Learning, CASA Security Envelope, AIDefence Shield, PBFT Consensus, and Live Terminal Dashboard."
-readme = "README.md"
-keywords = ["ai", "swarm", "orchestrator", "multi-agent", "cli"]
-categories = ["command-line-utilities", "development-tools", "concurrency"]
+repository = "https://github.com/Kilh4/ai-fleet"
 
-[lib]
-name = "ai_fleet"
-path = "src/lib.rs"
-
-[[bin]]
-name = "ai-fleet"
-path = "src/main.rs"
-
-[dependencies]
+[workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 sha2 = "0.10"
+fleet-core = { path = "crates/fleet-core" }
+fleet-agents = { path = "crates/fleet-agents" }
+fleet-memory = { path = "crates/fleet-memory" }
+fleet-neural = { path = "crates/fleet-neural" }
+fleet-security = { path = "crates/fleet-security" }
+fleet-swarm = { path = "crates/fleet-swarm" }
+fleet-workflows = { path = "crates/fleet-workflows" }
+fleet-federation = { path = "crates/fleet-federation" }
+fleet-providers = { path = "crates/fleet-providers" }
+fleet-mcp = { path = "crates/fleet-mcp" }
+fleet-tui = { path = "crates/fleet-tui" }

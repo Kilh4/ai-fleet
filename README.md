@@ -1,103 +1,88 @@
-# 🚀 AI-Fleet (`v2.0.0-rust`)
+# 🚀 AI-Fleet v3.0 (`12-Crate Rust Enterprise Monorepo`)
 
-**Enterprise Multi-AI Swarm Orchestrator in Native Rust** — Coordinate **Claude Code (`Opus 5.5` / `Sonnet 4.5`)**, **OpenAI Codex (`gpt-6.2-astra` / `soul`)**, **Google Antigravity (`Argon` / `Gemini 4 Neon`)**, and any custom AI CLI simultaneously across isolated Git worktrees with dynamic **8-Expert Mixture-of-Experts (MoE)** routing, **Pheromone-Adaptive Scheduling**, **Q-Learning**, and **Zero-Loss Quota Failover**.
+**Enterprise Multi-AI Swarm Orchestration Platform in Native Rust** — Orchestrate **Claude Code (`Opus 5.5` / `Sonnet 4.5`)**, **OpenAI Codex (`gpt-6.2-astra` / `soul`)**, **Google Antigravity (`Argon` / `Gemini 4 Neon`)**, and any custom AI CLI simultaneously across isolated `FencedLease` Git worktrees.
 
----
-
-## ✨ Key Architectural Advantages (Supersedes Ruflo V3)
-
-| Capability | Legacy Node/TS Orchestrators (`Ruflo`) | `AI-Fleet v2.0` (Native Rust) |
-| :--- | :--- | :--- |
-| **Runtime & Dependencies** | Node.js + npm cache (`zod` / `EPERM` issues on Windows) | **Single Zero-Overhead Native Rust Binary (`ai-fleet.exe`)** |
-| **Multi-AI Execution** | Tied primarily to Claude or paid API keys | **Runs Claude + Codex + Antigravity + Custom AIs in parallel** |
-| **Billing Protection** | Risk of accidental API key spend / 3rd-party proxy | **Strict Subscription-Only Sanitizer + CASA `$0.00` Paid-API Deny Gate** |
-| **Adaptive Model & Effort Routing** | Static model selection | **8-Expert MoE + Pheromone Trails + Q-Learning (`low` -> `medium` -> `high` -> `xhigh` -> `max`)** |
-| **Quota Failover & Recovery** | Halts when 5-hour limit hits | **Circuit-Breaker + Auto-Resume Timer + Epoch-Fenced Worktree Handoff** |
-| **Security & Governance** | External plugins | **Built-in CASA (ADR-380), AIDefence (ADR-118), ContinueGate, PBFT Consensus & SHA-256 Ledger** |
+Built as a **12-Crate Cargo Workspace** that ports and supersedes **Ruflo V3**:
+- **64 Specialized Agent Personas** across 8 enterprise domains (`fleet-agents`)
+- **64-Dim HNSW Semantic Vector Memory Graph** with sub-millisecond hybrid cosine + lexical retrieval (`fleet-memory`)
+- **2-Layer 8-Expert Neural Mixture-of-Experts (MoE)** + **SONA / EWC Fisher Information Consolidation** + **Information-Bottleneck Token Compressor** (`fleet-neural`)
+- **Queen Hive-Mind Task Decomposer** + **3 Consensus Engines (`PBFT Byzantine`, `Raft`, `Gossip`)** + **ADR-330 Pheromone Trails** + **Real Git Worktree Coordinator** (`fleet-swarm`)
+- **CASA Deterministic Authority Gate (`ADR-380 §3`)** + **AIDefence Prompt-Injection & Secret Shield (`ADR-118`)** + **ContinueGate** + **Cryptographic Truth Anchors** (`fleet-security`)
+- **SPARC 5-Phase Methodology Pipeline**, **Pair Programming Driver/Navigator**, and **12 Autonomous Daemon Workers** (`fleet-workflows`)
+- **Cross-Team Federation Hub** with **Automatic PII/Secret Redaction** and **Gumbel-Softmax Statistical Cryptographic Watermarking** (`fleet-federation`)
+- **Standards-Compliant Model Context Protocol (`MCP JSON-RPC 2.0 over stdio`) Server** (`fleet-mcp`)
+- **8-View Multi-Page ANSI/Unicode Terminal UI (`BBS` & `Orbital` modes)** (`fleet-tui`)
 
 ---
 
-## 🏗 Clean Modular Architecture
+## 🏗 12-Crate Workspace Architecture
 
 ```text
 ai-fleet/
-├── Cargo.toml                  # Crate manifest (library + CLI binary)
-├── src/
-│   ├── lib.rs                  # Public SDK surface
-│   ├── main.rs                 # CLI command router
-│   ├── domain.rs               # Core entities (FleetState, AiProvider, SwarmTask, FencedLease)
-│   ├── router.rs               # 8-Expert MoE gating, ADR-330 Pheromones, Q-Learning, ReasoningBank
-│   ├── security.rs             # CASA Authority Envelope, AIDefence Shield, ContinueGate
-│   ├── consensus.rs            # 4-Phase PBFT Weighted Consensus & SHA-256 Decision Ledger
-│   ├── executor.rs             # Parallel worktree runner, env sanitizer & live failover drill
-│   └── tui.rs                  # Rich ANSI/Unicode Terminal UI (BBS & Orbital views)
-├── tests/
-│   └── integration_tests.rs    # Full automated test suite (MoE, CASA, AIDefence, PBFT, Ledger)
-└── .github/workflows/ci.yml    # Cross-platform GitHub Actions CI (Linux, Windows, macOS)
+├── Cargo.toml                      # Workspace root (resolver = "2", 12 members)
+├── crates/
+│   ├── fleet-core/                 # Domain entities, SHA-256 hash-chained decision ledger, workspace discovery
+│   ├── fleet-agents/               # 64 specialized agent personas across 8 domains + capability matcher
+│   ├── fleet-memory/               # 64-dim HNSW semantic vector graph, n-gram embeddings & hybrid search
+│   ├── fleet-neural/               # 2-Layer 8-Expert MoE, SONA/EWC Fisher consolidation & token compressor
+│   ├── fleet-security/             # CASA (ADR-380), AIDefence (ADR-118), ContinueGate & TruthAnchors
+│   ├── fleet-swarm/                # Queen task decomposer, PBFT/Raft/Gossip consensus, Pheromones & Git worktrees
+│   ├── fleet-workflows/            # SPARC 5-phase methodology, Pair programming & 12 daemon workers
+│   ├── fleet-federation/           # Cross-team PII redactor & Gumbel-Softmax statistical watermark verifier
+│   ├── fleet-providers/            # Multi-AI CLI runner, subscription-only sanitizer & quota circuit-breaker
+│   ├── fleet-mcp/                  # Native JSON-RPC 2.0 MCP server (10 tools over stdio & CLI exec)
+│   └── fleet-tui/                  # 8-view terminal UI console (overview, agents, workflows, mcp, orbital)
+└── bins/
+    └── ai-fleet/                   # Unified CLI binary + workspace integration test suite
 ```
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Quick Start & Commands
 
-### 1. Build & Install
 ```bash
+# Build & run all workspace tests
+cargo test --workspace
 cargo build --release
-cargo test
-```
 
-### 2. Core Commands
-```bash
-# Launch live visual dashboard (BBS or Orbital look)
+# 1. Multi-View Visual Console
 ai-fleet status
 ai-fleet status --look orbital
+ai-fleet status --view agents
+ai-fleet status --view workflows
+ai-fleet status --view mcp
 
-# Start parallel orchestration across all ready AI providers
+# 2. Parallel Swarm Execution & Live Failover Drill
 ai-fleet start
-
-# Drain active writers safely and preserve checkpoints
+ai-fleet drill
 ai-fleet stop
 
-# Run live failover, FencedLease epoch escalation & PBFT consensus drill
-ai-fleet drill
-```
-
-### 3. Connect Any AI & Switch Models / Reasoning Effort
-```bash
-# Connect any new AI CLI tool (e.g., Ollama, Gemini, Aider, Cursor)
+# 3. Connect Any AI & Switch Models / Reasoning Effort (low -> medium -> high -> xhigh -> max)
 ai-fleet provider add ollama ollama.exe qwen3-coder:30b high run {model} "{prompt}"
-
-# Dynamically switch active model and reasoning effort
 ai-fleet provider switch codex soul xhigh
 ai-fleet provider switch antigravity argon xhigh
-
-# Update or reset 5-hour / daily quota window
 ai-fleet provider quota claude 0 45 ready
-```
 
-### 4. Advanced Subsystems
-```bash
-# 8-Expert Mixture-of-Experts neural gating
+# 4. 64 Agent Personas, Queen Decomposition & SPARC Methodology
+ai-fleet agents "PostgreSQL RLS policy audit"
+ai-fleet queen security-rls-audit
+ai-fleet sparc arch-verify
+
+# 5. Neural MoE + SONA/EWC, HNSW Vector Memory & Context Compression
 ai-fleet moe "Audit SQL migration money scale and RLS security policies"
+ai-fleet memory store estr-core zatca.secp256k1 "ZATCA Phase-2 uses ECDSA secp256k1 and PIH chaining"
+ai-fleet memory search "secp256k1 invoice signature"
+ai-fleet compress 12 "Long inter-agent handoff message with sha256=ae90aaab and commit 530fc5e..."
 
-# Inspect or evaporate/boost ADR-330 pheromone trails
-ai-fleet pheromone
-ai-fleet pheromone boost argon
-
-# Scan prompts for ADR-118 prompt injection & secret exposure
+# 6. PBFT / Raft / Gossip Consensus, AIDefence, CASA & Federation Watermarking
+ai-fleet consensus PBFT "Approve Phase 0 Gate"
+ai-fleet consensus Raft "Replicate swarm state"
 ai-fleet defense " task prompt "
-
-# Verify CASA (ADR-380 §3) deterministic authority gate
 ai-fleet casa worktree.write
-
-# Run 4-phase PBFT weighted consensus across all models
-ai-fleet consensus "Approve release gate"
-
-# Verify SHA-256 hash-chained decision ledger
+ai-fleet federate team-alpha "Payload with email apppbf@gmail.com and token=sk-ant-123"
 ai-fleet policy verify
+
+# 7. Native MCP Server (for Claude Code, Codex, Cursor, Antigravity)
+ai-fleet mcp start
+ai-fleet mcp exec fleet_swarm_status "{}"
 ```
-
----
-
-## 📄 License
-Dual-licensed under **MIT** or **Apache-2.0**.
