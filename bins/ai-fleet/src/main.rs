@@ -22,7 +22,7 @@ use fleet_swarm::{
 };
 use fleet_tui::{
     badge_effort, badge_status, badge_tier, enable_ansi_support, print_dashboard, render_float_bar, BOLD,
-    BRIGHT_CYAN, CYAN, GREEN, MAGENTA, RED, RESET, YELLOW,
+    BRIGHT_CYAN, CYAN, DIM, GREEN, MAGENTA, RED, RESET, YELLOW,
 };
 use fleet_workflows::advance_sparc_phase;
 use serde_json::Value;

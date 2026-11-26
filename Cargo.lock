@@ -131,14 +131,12 @@ name = "fleet-agents"
 version = "4.0.0"
 dependencies = [
  "serde",
- "serde_json",
 ]
 
 [[package]]
 name = "fleet-analyzer"
 version = "4.0.0"
 dependencies = [
- "fleet-core",
  "fleet-security",
  "serde",
 ]
@@ -159,8 +157,6 @@ dependencies = [
  "chrono",
  "fleet-core",
  "serde",
- "serde_json",
- "sha2",
 ]
 
 [[package]]
@@ -168,7 +164,6 @@ name = "fleet-hooks"
 version = "4.0.0"
 dependencies = [
  "chrono",
- "fleet-core",
  "fleet-security",
  "serde",
  "serde_json",
@@ -201,7 +196,6 @@ version = "4.0.0"
 dependencies = [
  "chrono",
  "serde",
- "serde_json",
  "sha2",
 ]
 
@@ -209,10 +203,8 @@ dependencies = [
 name = "fleet-neural"
 version = "4.0.0"
 dependencies = [
- "fleet-core",
  "fleet-memory",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -245,7 +237,6 @@ dependencies = [
  "chrono",
  "fleet-core",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -283,9 +274,7 @@ name = "fleet-workflows"
 version = "4.0.0"
 dependencies = [
  "chrono",
- "fleet-core",
  "serde",
- "serde_json",
 ]
 
 [[package]]
