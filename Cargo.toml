@@ -1,0 +1,24 @@
+[package]
+name = "ai-fleet"
+version = "2.0.0"
+edition = "2021"
+authors = ["AI-Fleet Contributors"]
+license = "MIT OR Apache-2.0"
+description = "Enterprise Multi-AI Swarm Orchestrator in Rust — 8-Expert MoE Router, Pheromone Scheduling, Q-Learning, CASA Security Envelope, AIDefence Shield, PBFT Consensus, and Live Terminal Dashboard."
+readme = "README.md"
+keywords = ["ai", "swarm", "orchestrator", "multi-agent", "cli"]
+categories = ["command-line-utilities", "development-tools", "concurrency"]
+
+[lib]
+name = "ai_fleet"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ai-fleet"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+sha2 = "0.10"
