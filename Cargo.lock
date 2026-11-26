@@ -4,15 +4,18 @@ version = 4
 
 [[package]]
 name = "ai-fleet"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-agents",
+ "fleet-analyzer",
  "fleet-core",
  "fleet-federation",
+ "fleet-hooks",
  "fleet-mcp",
  "fleet-memory",
  "fleet-neural",
+ "fleet-plugins",
  "fleet-providers",
  "fleet-security",
  "fleet-swarm",
@@ -125,15 +128,24 @@ checksum = "1c66915cc5391097de7a2b0b972e8505aa33c0df401fd3a6811dbdb32881ba48"
 
 [[package]]
 name = "fleet-agents"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "serde",
  "serde_json",
 ]
 
 [[package]]
+name = "fleet-analyzer"
+version = "4.0.0"
+dependencies = [
+ "fleet-core",
+ "fleet-security",
+ "serde",
+]
+
+[[package]]
 name = "fleet-core"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "serde",
@@ -142,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "fleet-federation"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-core",
@@ -152,15 +164,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleet-hooks"
+version = "4.0.0"
+dependencies = [
+ "chrono",
+ "fleet-core",
+ "fleet-security",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "fleet-mcp"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-agents",
+ "fleet-analyzer",
  "fleet-core",
  "fleet-federation",
+ "fleet-hooks",
  "fleet-memory",
  "fleet-neural",
+ "fleet-plugins",
  "fleet-providers",
  "fleet-security",
  "fleet-swarm",
@@ -171,7 +197,7 @@ dependencies = [
 
 [[package]]
 name = "fleet-memory"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "serde",
@@ -181,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "fleet-neural"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "fleet-core",
  "fleet-memory",
@@ -190,8 +216,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleet-plugins"
+version = "4.0.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "fleet-providers"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-agents",
@@ -207,7 +240,7 @@ dependencies = [
 
 [[package]]
 name = "fleet-security"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-core",
@@ -217,7 +250,7 @@ dependencies = [
 
 [[package]]
 name = "fleet-swarm"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-agents",
@@ -229,7 +262,7 @@ dependencies = [
 
 [[package]]
 name = "fleet-tui"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "fleet-agents",
  "fleet-core",
@@ -247,7 +280,7 @@ dependencies = [
 
 [[package]]
 name = "fleet-workflows"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-core",

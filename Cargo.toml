@@ -9,6 +9,9 @@ members = [
     "crates/fleet-swarm",
     "crates/fleet-workflows",
     "crates/fleet-federation",
+    "crates/fleet-plugins",
+    "crates/fleet-analyzer",
+    "crates/fleet-hooks",
     "crates/fleet-providers",
     "crates/fleet-mcp",
     "crates/fleet-tui",
@@ -16,7 +19,7 @@ members = [
 ]
 
 [workspace.package]
-version = "3.0.0"
+version = "4.0.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
@@ -33,6 +36,9 @@ fleet-security = { path = "crates/fleet-security" }
 fleet-swarm = { path = "crates/fleet-swarm" }
 fleet-workflows = { path = "crates/fleet-workflows" }
 fleet-federation = { path = "crates/fleet-federation" }
+fleet-plugins = { path = "crates/fleet-plugins" }
+fleet-analyzer = { path = "crates/fleet-analyzer" }
+fleet-hooks = { path = "crates/fleet-hooks" }
 fleet-providers = { path = "crates/fleet-providers" }
 fleet-mcp = { path = "crates/fleet-mcp" }
 fleet-tui = { path = "crates/fleet-tui" }

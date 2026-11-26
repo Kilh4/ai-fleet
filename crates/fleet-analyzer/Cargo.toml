@@ -1,0 +1,10 @@
+[package]
+name = "fleet-analyzer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+fleet-core.workspace = true
+fleet-security.workspace = true

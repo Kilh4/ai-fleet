@@ -1,15 +1,18 @@
 //! `fleet-mcp` — Native Rust Model Context Protocol (MCP) JSON-RPC 2.0 Server
-//! over stdio & direct CLI tool executor (`ai-fleet mcp start` / `ai-fleet mcp exec`).
-//! Connectable directly to Claude Code, Codex, Cursor, and Antigravity.
+//! exposing 15 tool namespaces across all 15 crates (`ai-fleet mcp start`).
 
 use chrono::Utc;
 use fleet_agents::{catalog_64_agents, find_best_persona};
+use fleet_analyzer::{analyze_git_repository, run_system_doctor};
+use fleet_core::detect_workspace_root;
 use fleet_federation::create_federated_packet;
+use fleet_hooks::execute_lifecycle_hook;
 use fleet_memory::{insert_hnsw_node, search_hnsw_semantic};
 use fleet_neural::{compress_message_to_token_budget, route_moe_experts};
+use fleet_plugins::{catalog_48_plugins, discover_plugins_for_task};
 use fleet_providers::{load_or_init_fleet_state, save_fleet_state};
 use fleet_security::{check_casa_authorization, scan_aidefence_threats};
-use fleet_swarm::{compute_optimal_route, execute_consensus};
+use fleet_swarm::{compute_optimal_route, execute_consensus, queen_decompose_task};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeSet;
@@ -26,12 +29,17 @@ pub fn list_mcp_tools() -> Vec<McpToolSpec> {
     let raw = [
         ("fleet_swarm_status", "swarm", "Return full multi-AI swarm topology, quotas, active leases, and ledger health"),
         ("fleet_agent_catalog", "agents", "List or query the 64 specialized agent personas across 8 domains"),
+        ("fleet_plugin_catalog", "plugins", "List or discover from the 48 built-in enterprise plugins"),
         ("fleet_route_moe", "neural", "Run 2-Layer 8-Expert MoE + Pheromone + SONA/EWC routing for a task"),
+        ("fleet_queen_decompose", "swarm", "Decompose a complex task into persona-assigned DAG sub-tasks"),
         ("fleet_memory_store", "memory", "Index a key-value document into the 64-dim HNSW semantic vector graph"),
         ("fleet_memory_search", "memory", "Execute hybrid HNSW cosine + lexical semantic search across shared memory"),
         ("fleet_consensus_vote", "consensus", "Execute PBFT, Raft, or Gossip weighted consensus across all AI models"),
         ("fleet_aidefence_scan", "security", "Scan prompt or file payload for ADR-118 prompt injection & secret leaks"),
         ("fleet_casa_authorize", "security", "Deterministically evaluate CASA (ADR-380 §3) deny-by-default authority envelope"),
+        ("fleet_analyze_repo", "analysis", "Analyze real git status, domain breakdown, risk level, and recommended effort"),
+        ("fleet_doctor_check", "system", "Run system diagnostics across git, rustc, cargo, claude, codex, node, docker"),
+        ("fleet_hook_eval", "hooks", "Evaluate PreToolUse, PostToolUse, SessionStart, or Stop lifecycle hook"),
         ("fleet_compress_message", "neural", "Compress inter-agent handoff message to target token budget (Information Bottleneck)"),
         ("fleet_federation_send", "federation", "Strip PII/secrets and embed Gumbel-Softmax watermark for cross-team federation"),
     ];
@@ -55,6 +63,8 @@ pub fn execute_mcp_tool(tool_name: &str, params: &Value) -> Value {
             "providers_count": state.providers.len(),
             "tasks_count": state.tasks.len(),
             "vector_memory_nodes": state.vector_memory.len(),
+            "plugins_available": 48,
+            "personas_available": 64,
         }),
         "fleet_agent_catalog" => {
             let query = params.get("query").and_then(|v| v.as_str()).unwrap_or("");
@@ -64,6 +74,16 @@ pub fn execute_mcp_tool(tool_name: &str, params: &Value) -> Value {
             } else {
                 let best = find_best_persona(query);
                 json!({ "success": true, "matched_persona": best })
+            }
+        }
+        "fleet_plugin_catalog" => {
+            let query = params.get("query").and_then(|v| v.as_str()).unwrap_or("");
+            if query.is_empty() {
+                let all = catalog_48_plugins();
+                json!({ "success": true, "total_plugins": all.len(), "plugins": all })
+            } else {
+                let matched = discover_plugins_for_task(query);
+                json!({ "success": true, "matched_plugins": matched })
             }
         }
         "fleet_route_moe" => {
@@ -84,6 +104,14 @@ pub fn execute_mcp_tool(tool_name: &str, params: &Value) -> Value {
                 )
             });
             json!({ "success": true, "moe": moe, "optimal_route": route })
+        }
+        "fleet_queen_decompose" => {
+            let tid = params.get("task_id").and_then(|v| v.as_str()).unwrap_or("security-rls-audit");
+            if let Some(t) = state.tasks.get(tid) {
+                json!({ "success": true, "analysis": queen_decompose_task(t) })
+            } else {
+                json!({ "success": false, "error": "Task not found" })
+            }
         }
         "fleet_memory_store" => {
             let ns = params.get("namespace").and_then(|v| v.as_str()).unwrap_or("global");
@@ -117,6 +145,21 @@ pub fn execute_mcp_tool(tool_name: &str, params: &Value) -> Value {
             let dec = check_casa_authorization(&state.casa_envelope, action, &Utc::now().to_rfc3339());
             json!({ "success": true, "decision": dec })
         }
+        "fleet_analyze_repo" => {
+            let ws = detect_workspace_root();
+            let rep = analyze_git_repository(&ws);
+            json!({ "success": true, "report": rep })
+        }
+        "fleet_doctor_check" => {
+            let checks = run_system_doctor();
+            json!({ "success": true, "checks": checks })
+        }
+        "fleet_hook_eval" => {
+            let event = params.get("event").and_then(|v| v.as_str()).unwrap_or("SessionStart");
+            let payload = params.get("payload").and_then(|v| v.as_str()).unwrap_or("");
+            let res = execute_lifecycle_hook(event, payload, &state.casa_envelope, &state.continue_gate);
+            json!({ "success": true, "hook_result": res })
+        }
         "fleet_compress_message" => {
             let text = params.get("text").and_then(|v| v.as_str()).unwrap_or("");
             let budget = params.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(20) as usize;
@@ -126,14 +169,13 @@ pub fn execute_mcp_tool(tool_name: &str, params: &Value) -> Value {
         "fleet_federation_send" => {
             let peer = params.get("peer").and_then(|v| v.as_str()).unwrap_or("team-alpha");
             let payload = params.get("payload").and_then(|v| v.as_str()).unwrap_or("");
-            let env = create_federated_packet("ai-fleet-local", peer, payload, "estr-salt-v3");
+            let env = create_federated_packet("ai-fleet-local", peer, payload, "estr-salt-v4");
             json!({ "success": true, "envelope": env })
         }
         _ => json!({ "success": false, "error": format!("Unknown MCP tool '{}'", tool_name) }),
     }
 }
 
-/// Runs a standards-compliant JSON-RPC 2.0 MCP Server loop over stdio.
 pub fn run_mcp_stdio_server() {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
@@ -156,7 +198,7 @@ pub fn run_mcp_stdio_server() {
                 "id": id,
                 "result": {
                     "protocolVersion": "2024-11-05",
-                    "serverInfo": { "name": "ai-fleet-mcp", "version": "3.0.0" },
+                    "serverInfo": { "name": "ai-fleet-mcp", "version": "4.0.0" },
                     "capabilities": { "tools": {} }
                 }
             }),
