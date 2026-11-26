@@ -118,7 +118,15 @@ fn test_pbft_raft_gossip_consensus_and_federation_watermark() {
     let (next_sparc, _, _, _) = advance_sparc_phase("Spec");
     assert_eq!(next_sparc, "Pseudocode");
     assert_eq!(built_in_12_daemon_workers().len(), 12);
-    assert_eq!(list_mcp_tools().len(), 10);
+    assert_eq!(list_mcp_tools().len(), 15);
+    assert_eq!(fleet_plugins::catalog_48_plugins().len(), 48);
+    let hook_res = fleet_hooks::execute_lifecycle_hook(
+        "PreToolUse",
+        "safe tool execution",
+        &state.casa_envelope,
+        &state.continue_gate,
+    );
+    assert!(hook_res.allowed);
     let mcp_out = execute_mcp_tool("fleet_swarm_status", &json!({}));
     assert_eq!(mcp_out["success"], json!(true));
 
