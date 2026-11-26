@@ -110,6 +110,22 @@ fn main() {
             fs::write("src/invoice.rs", "pub struct Invoice { pub total_minor_units: i64 }\n").expect("write fixed money");
             println!("Fixed src/invoice.rs to use exact integer minor units.");
         }
+        "claude-session-fail" => {
+            println!(r#"{{"type":"system","subtype":"init","session_id":"sess-live-42"}}"#);
+            println!(r#"{{"type":"result","subtype":"success","is_error":false,"result":"Partial work without verify target.","session_id":"sess-live-42"}}"#);
+        }
+        "claude-session-ok" => {
+            append_line(&file, "resumed-ok");
+            println!(r#"{{"type":"result","subtype":"success","is_error":false,"result":"Completed after resuming session.","session_id":"sess-live-42"}}"#);
+        }
+        "queen-json" => {
+            println!(
+                "```json\n{{\"nodes\":[\
+                {{\"key\":\"schema\",\"title\":\"Schema contract\",\"prompt\":\"Create schema\",\"depends_on\":[],\"owned_files\":[\"docs/specs/**\"],\"complexity\":\"standard\",\"skills\":[]}},\
+                {{\"key\":\"impl\",\"title\":\"Core slice\",\"prompt\":\"Implement core\",\"depends_on\":[\"schema\"],\"owned_files\":[\"src/**\"],\"complexity\":\"deep\",\"skills\":[]}}\
+                ]}}\n```"
+            );
+        }
         "touch" => {
             append_line(&file, "ok");
             println!("Created {file}.");

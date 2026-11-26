@@ -261,7 +261,7 @@ Verify boundary conditions, failure recovery, and security/audit invariants."
         wave: 2,
     });
 
-    validate_and_schedule_dag(epic, "queen-architectural-dag", nodes, verify)
+    validate_and_schedule_dag(epic, "deterministic-codegraph-dag", nodes, verify)
 }
 
 fn short_title(epic: &str) -> String {

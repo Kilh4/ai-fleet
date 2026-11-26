@@ -9,9 +9,12 @@ use crate::memory::{MemoryKind, MemoryStore, NewMemory};
 use crate::model::*;
 use crate::proc::{run_process, run_shell, ProcSpec, StreamKind};
 use crate::prompts::{self, AuthorContext, Verdict};
-use crate::providers::{self, build_invocation, classify, resolve_binary, ParsedOutput, ProviderSpec, StreamParser};
-use crate::queen::EpicPlan;
-use crate::router::{route, Candidate, Role, Route};
+use crate::providers::{
+    self, build_invocation, build_invocation_with_session, classify, resolve_binary, ParsedOutput,
+    ProviderSpec, StreamParser,
+};
+use crate::queen::{self, EpicPlan};
+use crate::router::{route_contextual, Candidate, Role, Route};
 use crate::skills::SkillRegistry;
 use crate::store::{now_ts, truncate, Store};
 use chrono::Utc;
@@ -19,13 +22,14 @@ use fleet_kernel::{
     Bulkhead, CircuitBreaker, CircuitBreakerConfig, DomainEventBus, DomainEventPayload, HookPhase,
     InterceptContext, WorkStealingBroker,
 };
+use fleet_neural::{extract_context_features, LinUcbRouter};
 use fleet_plugins::{default_plugin_host, PluginCapability, PluginHost, PluginManifest, PluginTrustTier};
 use fleet_security::AiDefenceKernelInterceptor;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex as StdMutex};
 use std::time::{Duration, Instant};
 use tokio::sync::broadcast;
 use tokio::task::JoinSet;
@@ -133,6 +137,7 @@ struct Inner {
     plugin_host: PluginHost,
     breakers: HashMap<String, CircuitBreaker>,
     bulkheads: HashMap<String, Bulkhead>,
+    linucb: StdMutex<LinUcbRouter>,
     claims: WorkStealingBroker,
     binaries: HashMap<String, Option<PathBuf>>,
     cancel: CancellationToken,
@@ -240,6 +245,33 @@ impl Engine {
             .iter()
             .map(|p| (p.id.clone(), Bulkhead::new(p.id.clone(), p.max_concurrency.max(1))))
             .collect();
+        let mut linucb = LinUcbRouter::new(0.35);
+        for p in &cfg.providers {
+            for m in &p.models {
+                linucb.ensure_arm(&format!("{}/{}", p.id, m.name));
+            }
+        }
+        if let (Ok(tasks_hist), Ok(runs_hist)) = (store.list_tasks(), store.recent_runs(500)) {
+            let task_map: HashMap<String, Task> = tasks_hist.into_iter().map(|t| (t.id.clone(), t)).collect();
+            for r in runs_hist.into_iter().rev() {
+                if r.ended_at.is_none() {
+                    continue;
+                }
+                if r.failure_kind
+                    .as_deref()
+                    .is_some_and(|k| matches!(k, "quota" | "auth" | "unavailable" | "cancelled" | "internal"))
+                {
+                    continue;
+                }
+                let (prompt_txt, tier, files_n) = match task_map.get(&r.task_id) {
+                    Some(t) => (format!("{}\n{}", t.title, t.prompt), t.complexity.tier(), t.owned_files.len()),
+                    None => (r.task_id.clone(), 2, 0),
+                };
+                let ctx = extract_context_features(&prompt_txt, tier, r.attempt.saturating_sub(1), files_n, r.role == "reviewer");
+                let reward = if r.outcome.as_deref() == Some("success") { 1.0 } else { 0.0 };
+                linucb.update(&format!("{}/{}", r.provider, r.model), &ctx, reward);
+            }
+        }
         let claims = WorkStealingBroker::new(cfg.run_timeout);
         let binaries = cfg.providers.iter().map(|p| (p.id.clone(), resolve_binary(&p.binary))).collect();
         let (events, _) = broadcast::channel(1024);
@@ -253,6 +285,7 @@ impl Engine {
                 plugin_host,
                 breakers,
                 bulkheads,
+                linucb: StdMutex::new(linucb),
                 claims,
                 binaries,
                 cancel: CancellationToken::new(),
@@ -288,6 +321,142 @@ impl Engine {
 
     pub fn skills(&self) -> &SkillRegistry {
         &self.inner.skills
+    }
+
+    /// Plan an epic into a validated multi-wave DAG.
+    ///
+    /// When `offline == false`, invokes the highest-tier ready installed AI CLI
+    /// (`claude`, `codex`, etc.) with `queen_planning_prompt` and validates the
+    /// returned JSON DAG (failing over across providers on quota/auth errors).
+    /// When `offline == true`, runs deterministic `CodeGraph` + `SkillRegistry`
+    /// architectural decomposition and labels `planner_source` truthfully.
+    pub async fn plan_epic(&self, epic: &str, offline: bool, verify_cmd: Option<String>) -> Result<EpicPlan> {
+        if epic.trim().is_empty() {
+            return Err(EngineError::Config("epic must not be empty".into()));
+        }
+        let repo = self.inner.cfg.repo.clone();
+        let graph = blocking({
+            let r = repo.clone();
+            move || CodeGraph::scan(&r, 800)
+        })
+        .await?;
+        let verify = verify_cmd.or_else(|| queen::detect_repo_verify_cmd(&repo));
+
+        if offline {
+            let plan = queen::decompose_architecturally(epic, &repo, &graph, &self.inner.skills, verify)?;
+            self.inner.emit(
+                None,
+                "queen.planned_offline",
+                &format!("planned {} task(s) across {} wave(s) via deterministic CodeGraph", plan.nodes.len(), plan.waves),
+            );
+            return Ok(plan);
+        }
+
+        let now = Utc::now();
+        let cooldowns = self.inner.store.active_cooldowns(now)?;
+        let mut ready_providers: Vec<(ProviderSpec, PathBuf)> = self
+            .inner
+            .cfg
+            .providers
+            .iter()
+            .filter(|p| p.enabled && !cooldowns.contains_key(&p.id))
+            .filter_map(|p| {
+                self.inner
+                    .binaries
+                    .get(&p.id)
+                    .cloned()
+                    .flatten()
+                    .map(|bin| (p.clone(), bin))
+            })
+            .collect();
+
+        if ready_providers.is_empty() {
+            return Err(EngineError::Config(
+                "no enabled, ready AI CLI binary found on PATH for live Queen planning (pass `--offline` to use deterministic CodeGraph decomposition)".into(),
+            ));
+        }
+        ready_providers.sort_by_key(|(p, _)| std::cmp::Reverse(p.models.iter().map(|m| m.tier).max().unwrap_or(1)));
+
+        let prompt = queen::queen_planning_prompt(epic, &graph, &self.inner.skills, 6);
+        let mut errors = Vec::new();
+
+        for (spec, bin) in ready_providers {
+            let Some(model) = spec.models.iter().max_by_key(|m| m.tier).cloned() else { continue };
+            let effort = Effort::High.min(model.max_effort);
+            let inv = build_invocation(&spec, &bin, &model.name, effort, &prompt, &repo);
+            let log_path = self
+                .inner
+                .cfg
+                .state_dir
+                .join("logs")
+                .join("_queen")
+                .join(format!("queen-{}-{}.log", spec.id, Utc::now().timestamp_millis()));
+            if let Some(parent) = log_path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            let mut parser = StreamParser::new(spec.output);
+            let ps = ProcSpec {
+                program: inv.program,
+                args: inv.args,
+                cwd: repo.clone(),
+                env: inv.env,
+                stdin: inv.stdin,
+                timeout: self.inner.cfg.run_timeout.min(Duration::from_secs(300)),
+                idle_timeout: self.inner.cfg.idle_timeout.min(Duration::from_secs(120)),
+                log_path: Some(log_path),
+            };
+            let pr = match run_process(
+                ps,
+                |kind, line| {
+                    if kind == StreamKind::Stdout {
+                        parser.feed(line);
+                    }
+                },
+                self.inner.cancel.child_token(),
+            )
+            .await
+            {
+                Ok(pr) => pr,
+                Err(e) => {
+                    errors.push(format!("{}: launch failed ({e})", spec.id));
+                    continue;
+                }
+            };
+            let parsed = parser.finish(&pr);
+            let outcome = classify(&spec, &pr, &parsed, Utc::now());
+            match outcome {
+                RunOutcome::Success => {
+                    let src = format!("live-ai:{}/{}", spec.id, model.name);
+                    match queen::parse_ai_plan_json(epic, &src, &parsed.final_text, verify.clone()) {
+                        Ok(plan) => {
+                            self.inner.emit(
+                                None,
+                                "queen.planned_live",
+                                &format!("{src} decomposed epic into {} task(s) across {} wave(s)", plan.nodes.len(), plan.waves),
+                            );
+                            return Ok(plan);
+                        }
+                        Err(e) => {
+                            errors.push(format!("{src}: invalid JSON plan ({e})"));
+                        }
+                    }
+                }
+                RunOutcome::Failure { kind, detail, retry_at } => {
+                    if kind.is_provider_fault() {
+                        let until = retry_at.unwrap_or_else(|| Utc::now() + chrono::Duration::seconds(spec.default_cooldown_secs as i64));
+                        if let Err(e) = self.inner.store.set_cooldown(&spec.id, until, kind.as_str(), &detail) {
+                            eprintln!("warn: failed to persist provider cooldown for {}: {e}", spec.id);
+                        }
+                    }
+                    errors.push(format!("{}/{}: {} ({})", spec.id, model.name, kind, truncate(&detail, 240)));
+                }
+            }
+        }
+
+        Err(EngineError::Config(format!(
+            "live AI Queen planning failed across ready providers: {} (pass `--offline` for deterministic CodeGraph decomposition)",
+            errors.join(" | ")
+        )))
     }
 
     /// Enqueue every node of a validated Queen [`EpicPlan`], wiring `depends_on`
@@ -470,7 +639,11 @@ impl Engine {
                         inflight: inflight.get(&p.id).copied().unwrap_or(0),
                     })
                     .collect();
-                match route(task, role, &cands, &stats, now) {
+                let routed = {
+                    let bandit = inner.linucb.lock().unwrap_or_else(|e| e.into_inner());
+                    route_contextual(task, role, &cands, &stats, Some(&*bandit), now)
+                };
+                match routed {
                     Err(why) => {
                         if waiting.get(&task.id) != Some(&why) {
                             inner.emit(Some(&task.id), "task.waiting", &format!("no {} available: {why}", role.as_str()));
@@ -562,13 +735,34 @@ impl Engine {
 
 impl Inner {
     fn emit(&self, task_id: Option<&str>, kind: &str, message: &str) {
-        let _ = self.store.append_event(task_id, kind, message);
+        if let Err(e) = self.store.append_event(task_id, kind, message) {
+            eprintln!("warn: failed to persist event `{kind}`: {e}");
+        }
         let _ = self.events.send(EngineEvent {
             ts: now_ts(),
             task_id: task_id.map(str::to_string),
             kind: kind.to_string(),
             message: message.to_string(),
         });
+    }
+
+    fn record_linucb(&self, task: &Task, role: Role, route: &Route, outcome: &RunOutcome) {
+        if outcome
+            .kind()
+            .is_some_and(|k| k.is_provider_fault() || matches!(k, FailureKind::Cancelled | FailureKind::Internal))
+        {
+            return;
+        }
+        let ctx = extract_context_features(
+            &format!("{}\n{}", task.title, task.prompt),
+            task.complexity.tier(),
+            task.attempts,
+            task.owned_files.len(),
+            role == Role::Reviewer,
+        );
+        let reward = if outcome.is_success() { 1.0 } else { 0.0 };
+        let mut bandit = self.linucb.lock().unwrap_or_else(|e| e.into_inner());
+        bandit.update(&format!("{}/{}", route.provider, route.model), &ctx, reward);
     }
 
     fn spec(&self, id: &str) -> Result<&ProviderSpec> {
@@ -741,10 +935,16 @@ impl Inner {
                 role: role.as_str().into(),
             },
         );
+        let resume_sid = if role == Role::Author && task.last_provider.as_deref() == Some(route.provider.as_str()) {
+            task.last_session_id.as_deref()
+        } else {
+            None
+        };
+        let resume_note = resume_sid.map(|s| format!(" [resume={s}]")).unwrap_or_default();
         self.emit(
             Some(&task.id),
             "run.started",
-            &format!("{} via {}/{} effort={} (attempt {attempt})", role.as_str(), route.provider, route.model, route.effort),
+            &format!("{} via {}/{} effort={} (attempt {attempt}){resume_note}", role.as_str(), route.provider, route.model, route.effort),
         );
 
         let _bulkhead_permit = match self.bulkheads.get(&spec.id) {
@@ -765,7 +965,7 @@ impl Inner {
                 None,
             ),
             Some(bin) => {
-                let inv = build_invocation(&spec, &bin, &route.model, route.effort, &prompt, wt);
+                let inv = build_invocation_with_session(&spec, &bin, &route.model, route.effort, &prompt, wt, resume_sid);
                 if let Some(parent) = log_path.parent() {
                     std::fs::create_dir_all(parent)?;
                 }
@@ -995,7 +1195,7 @@ impl Inner {
             if let Some(prev_kind) = task.last_failure.as_deref() {
                 let prev_err = truncate(task.last_error.as_deref().unwrap_or(""), 500);
                 let fix_summary = truncate(&run.parsed.final_text, 500);
-                let _ = self.memory.store(NewMemory {
+                match self.memory.store(NewMemory {
                     kind: MemoryKind::Reflexion,
                     title: format!("Resolved `{prev_kind}` on {}", task.title),
                     content: format!("Earlier attempt failed ({prev_kind}): {prev_err} | Fixed by: {fix_summary}"),
@@ -1003,11 +1203,14 @@ impl Inner {
                     tags: vec![prev_kind.to_string(), "reflexion".into()],
                     task_id: Some(task.id.clone()),
                     importance: 2.2,
-                });
-                self.emit(Some(&task.id), "memory.reflexion_saved", &format!("recorded reflexion lesson for overcoming `{prev_kind}`"));
+                }) {
+                    Ok(_) => self.emit(Some(&task.id), "memory.reflexion_saved", &format!("recorded reflexion lesson for overcoming `{prev_kind}`")),
+                    Err(e) => self.emit(Some(&task.id), "memory.error", &format!("failed to store reflexion lesson: {e}")),
+                }
             }
         }
 
+        self.record_linucb(&task, Role::Author, &route, &outcome);
         self.store.finish_run(run.run_id, &outcome, run.exit_code, run.duration_ms, run.parsed.session_id.as_deref(), &after)?;
         self.emit(Some(&task.id), "run.finished", &format!("{} via {}/{} -> {}", "author", route.provider, route.model, outcome.label()));
 
@@ -1019,6 +1222,11 @@ impl Inner {
         t.branch = Some(branch);
         t.worktree = Some(wt.to_string_lossy().to_string());
         t.head_commit = Some(after.clone());
+        if let Some(sid) = &run.parsed.session_id {
+            t.last_session_id = Some(sid.clone());
+        } else if t.last_provider.as_deref() != Some(route.provider.as_str()) {
+            t.last_session_id = None;
+        }
         t.last_provider = Some(route.provider.clone());
         t.last_model = Some(route.model.clone());
         t.last_effort = Some(route.effort.as_str().into());
@@ -1105,6 +1313,7 @@ impl Inner {
         if outcome.is_success() && verdict.is_none() {
             outcome = RunOutcome::failure(FailureKind::AgentError, "reviewer did not end with a `VERDICT:` line");
         }
+        self.record_linucb(&task, Role::Reviewer, &route, &outcome);
         self.store.finish_run(run.run_id, &outcome, run.exit_code, run.duration_ms, run.parsed.session_id.as_deref(), &head)?;
 
         let Some(mut t) = self.store.get_task(&task.id)? else { return Ok(()) };
@@ -1223,7 +1432,7 @@ impl Inner {
                 }
                 if ok {
                     t.status = TaskStatus::Done;
-                    let _ = self.memory.store(NewMemory {
+                    if let Err(e) = self.memory.store(NewMemory {
                         kind: MemoryKind::Episode,
                         title: format!("Completed: {}", t.title),
                         content: truncate(t.result_summary.as_deref().unwrap_or(&t.prompt), 900),
@@ -1231,7 +1440,9 @@ impl Inner {
                         tags: vec!["episode".into(), t.complexity.as_str().into()],
                         task_id: Some(t.id.clone()),
                         importance: 1.0,
-                    });
+                    }) {
+                        self.emit(Some(&t.id), "memory.error", &format!("failed to store episode memory: {e}"));
+                    }
                     self.emit(Some(&t.id), "task.done", &format!("merged into {int_branch}"));
                 }
             }

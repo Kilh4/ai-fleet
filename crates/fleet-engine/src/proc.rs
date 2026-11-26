@@ -387,23 +387,31 @@ mod tests {
 
     #[tokio::test]
     async fn idle_timeout_kills_silent_process() {
-        let cmd = if cfg!(windows) { "ping -n 30 127.0.0.1 >nul" } else { "sleep 30" };
+        let cmd = if cfg!(windows) {
+            "for /L %i in (1,0,2) do @ver >nul"
+        } else {
+            "sleep 30"
+        };
         let r = run_process(spec(cmd, 60, 1), |_, _| {}, CancellationToken::new()).await.unwrap();
-        assert!(r.stalled);
+        assert!(r.stalled, "expected stalled=true, got {r:?}");
         assert!(r.duration_ms < 15_000, "took {}ms", r.duration_ms);
     }
 
     #[tokio::test]
     async fn cancellation_stops_process() {
-        let cmd = if cfg!(windows) { "ping -n 30 127.0.0.1" } else { "sleep 30" };
+        let cmd = if cfg!(windows) {
+            "for /L %i in (1,0,2) do @ver >nul"
+        } else {
+            "sleep 30"
+        };
         let token = CancellationToken::new();
         let t2 = token.clone();
         tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_millis(500)).await;
+            tokio::time::sleep(Duration::from_millis(250)).await;
             t2.cancel();
         });
         let r = run_process(spec(cmd, 60, 60), |_, _| {}, token).await.unwrap();
-        assert!(r.cancelled);
+        assert!(r.cancelled, "expected cancelled=true, got {r:?}");
         assert!(r.duration_ms < 15_000);
     }
 }

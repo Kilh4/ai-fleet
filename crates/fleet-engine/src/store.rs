@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     last_provider TEXT,
     last_model TEXT,
     last_effort TEXT,
+    last_session_id TEXT,
     last_failure TEXT,
     last_error TEXT,
     result_summary TEXT,
@@ -163,6 +164,7 @@ fn row_to_task(r: &Row<'_>) -> rusqlite::Result<Task> {
         last_provider: r.get("last_provider")?,
         last_model: r.get("last_model")?,
         last_effort: r.get("last_effort")?,
+        last_session_id: r.get("last_session_id").ok().flatten(),
         last_failure: r.get("last_failure")?,
         last_error: r.get("last_error")?,
         result_summary: r.get("result_summary")?,
@@ -220,15 +222,27 @@ impl Store {
         Self::init(Connection::open_in_memory()?)
     }
 
+    fn ensure_column(conn: &Connection, table: &str, column: &str, col_def: &str) -> Result<()> {
+        let mut stmt = conn.prepare(&format!("PRAGMA table_info({table})"))?;
+        let cols: Vec<String> = stmt
+            .query_map([], |r| r.get::<_, String>(1))?
+            .collect::<rusqlite::Result<_>>()?;
+        if !cols.iter().any(|c| c == column) {
+            conn.execute(&format!("ALTER TABLE {table} ADD COLUMN {column} {col_def}"), [])?;
+        }
+        Ok(())
+    }
+
     fn init(conn: Connection) -> Result<Self> {
         conn.busy_timeout(std::time::Duration::from_secs(10))?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "synchronous", "NORMAL")?;
         conn.pragma_update(None, "foreign_keys", "ON")?;
         conn.execute_batch(SCHEMA)?;
-        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN skills TEXT NOT NULL DEFAULT '[]'", []);
-        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN auto_skills INTEGER NOT NULL DEFAULT 1", []);
-        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN review_quorum INTEGER NOT NULL DEFAULT 1", []);
+        Self::ensure_column(&conn, "tasks", "skills", "TEXT NOT NULL DEFAULT '[]'")?;
+        Self::ensure_column(&conn, "tasks", "auto_skills", "INTEGER NOT NULL DEFAULT 1")?;
+        Self::ensure_column(&conn, "tasks", "review_quorum", "INTEGER NOT NULL DEFAULT 1")?;
+        Self::ensure_column(&conn, "tasks", "last_session_id", "TEXT")?;
         Ok(Store { conn: Mutex::new(conn) })
     }
 
@@ -290,9 +304,9 @@ impl Store {
                 complexity=?8, verify_cmd=?9, max_attempts=?10, attempts=?11, handoffs=?12, review_required=?13,
                 review_quorum=?14, preferred_provider=?15, skills=?16, auto_skills=?17, branch=?18, worktree=?19,
                 base_commit=?20, head_commit=?21, authors=?22, reviewer=?23, last_provider=?24, last_model=?25,
-                last_effort=?26, last_failure=?27, last_error=?28, result_summary=?29, review_feedback=?30,
-                lease_epoch=?31, lease_expires_at=?32, updated_at=?33
-             WHERE id=?1 AND (?34 IS NULL OR lease_epoch=?34)",
+                last_effort=?26, last_session_id=?27, last_failure=?28, last_error=?29, result_summary=?30, review_feedback=?31,
+                lease_epoch=?32, lease_expires_at=?33, updated_at=?34
+             WHERE id=?1 AND (?35 IS NULL OR lease_epoch=?35)",
             params![
                 t.id,
                 t.title,
@@ -320,6 +334,7 @@ impl Store {
                 t.last_provider,
                 t.last_model,
                 t.last_effort,
+                t.last_session_id,
                 t.last_failure,
                 t.last_error,
                 t.result_summary,

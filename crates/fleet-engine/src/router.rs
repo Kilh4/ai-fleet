@@ -5,6 +5,7 @@ use crate::model::{Complexity, Effort, Task};
 use crate::providers::{ModelSpec, ProviderSpec};
 use crate::store::Stat;
 use chrono::{DateTime, Utc};
+use fleet_neural::{extract_context_features, LinUcbRouter};
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -78,8 +79,26 @@ pub fn route(
     stats: &HashMap<(String, String), Stat>,
     now: DateTime<Utc>,
 ) -> Result<Route, String> {
+    route_contextual(task, role, candidates, stats, None, now)
+}
+
+pub fn route_contextual(
+    task: &Task,
+    role: Role,
+    candidates: &[Candidate<'_>],
+    stats: &HashMap<(String, String), Stat>,
+    linucb: Option<&LinUcbRouter>,
+    now: DateTime<Utc>,
+) -> Result<Route, String> {
     let (tier, effort) = desired(task, role);
     let total_runs: u32 = stats.values().map(|s| s.successes + s.failures).sum();
+    let ctx = extract_context_features(
+        &format!("{}\n{}", task.title, task.prompt),
+        tier,
+        task.attempts,
+        task.owned_files.len(),
+        role == Role::Reviewer,
+    );
     let mut excluded = Vec::new();
     let mut scored: Vec<Route> = Vec::new();
 
@@ -119,14 +138,21 @@ pub fn route(
             continue;
         };
 
-        // UCB1 over (provider, model) with a Beta(1,1) prior: exploit what has
-        // worked, keep exploring what has little history.
+        // UCB1 over (provider, model) with a Beta(1,1) prior + optional Sherman-Morrison LinUCB contextual bandit.
         let st = stats.get(&(id.to_string(), m.name.clone())).cloned().unwrap_or_default();
         let n = (st.successes + st.failures) as f64;
         let mean = (st.successes as f64 + 1.0) / (n + 2.0);
         let explore = 0.5 * ((2.0 * (total_runs as f64 + 1.0).ln()) / (n + 1.0)).sqrt();
-        let mut score = mean + explore;
-        let mut notes = vec![format!("success {:.0}% over {} runs", mean * 100.0, n as u32)];
+        let ucb1 = mean + explore;
+        let arm_id = format!("{id}/{}", m.name);
+        let (mut score, mut notes) = if let Some(sel) = linucb.and_then(|b| b.select(&ctx, std::slice::from_ref(&arm_id))) {
+            (
+                0.60 * ucb1 + 0.40 * sel.ucb_score,
+                vec![format!("success {:.0}% over {} runs, linucb={:.2}", mean * 100.0, n as u32, sel.ucb_score)],
+            )
+        } else {
+            (ucb1, vec![format!("success {:.0}% over {} runs", mean * 100.0, n as u32)])
+        };
 
         if role == Role::Author && task.preferred_provider.as_deref() == Some(id) {
             score += 0.25;
@@ -213,6 +239,7 @@ mod tests {
             last_provider: None,
             last_model: None,
             last_effort: None,
+            last_session_id: None,
             last_failure: None,
             last_error: None,
             result_summary: None,
@@ -278,5 +305,20 @@ mod tests {
         stats.insert(("b".to_string(), "b-strong".to_string()), Stat { successes: 19, failures: 1, avg_ms: 0.0 });
         let r = route(&task(Complexity::Deep, 0), Role::Author, &cands(&specs), &stats, Utc::now()).unwrap();
         assert_eq!(r.provider, "b");
+
+        // Contextual LinUCB specialization overrides flat tie when trained on domain context
+        let mut bandit = LinUcbRouter::new(0.35);
+        bandit.ensure_arm("a/a-strong");
+        bandit.ensure_arm("b/b-strong");
+        let mut sql_task = task(Complexity::Deep, 0);
+        sql_task.prompt = "Implement SQL ledger invoice migration".into();
+        let ctx = extract_context_features(&format!("{}\n{}", sql_task.title, sql_task.prompt), 3, 0, 0, false);
+        for _ in 0..20 {
+            bandit.update("a/a-strong", &ctx, 1.0);
+            bandit.update("b/b-strong", &ctx, 0.0);
+        }
+        let rc = route_contextual(&sql_task, Role::Author, &cands(&specs), &HashMap::new(), Some(&bandit), Utc::now()).unwrap();
+        assert_eq!(rc.provider, "a");
+        assert!(rc.reason.contains("linucb="));
     }
 }

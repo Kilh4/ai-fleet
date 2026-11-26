@@ -84,25 +84,35 @@ fn print_v4_help() {
 fn main() {
     enable_ansi_support();
     let args: Vec<String> = env::args().skip(1).collect();
-    // Real execution engine (persistent queue, quota failover, Queen DAG, FTS5+Vector Memory, CodeGraph, Static Gate, 120 elite skills).
+
+    // Isolate legacy v4/v5 state-v5.json diagnostics behind explicit `ai-fleet legacy ...`
+    // so zero hardcoded demo tasks (`arch-verify`, `security-rls-audit`) EVER appear on any primary command.
+    if args.first().map(String::as_str) == Some("legacy") {
+        run_legacy_v4(&args[1..]);
+        return;
+    }
+
+    // Backwards-compatible alias: `ai-fleet engine <subcommand>` == `ai-fleet <subcommand>`
     if args.first().map(String::as_str) == Some("engine") {
         std::process::exit(fleet_engine::cli::main(&args[1..]));
     }
-    if matches!(args.first().map(String::as_str), Some("graph" | "audit")) {
-        std::process::exit(fleet_engine::cli::main(&args));
+    if args.first().map(String::as_str) == Some("skills") && args.len() == 1 {
+        std::process::exit(fleet_engine::cli::main(&["skills".into(), "list".into()]));
     }
-    if args.first().map(String::as_str) == Some("mcp") && args.get(1).map(String::as_str) == Some("engine") {
-        std::process::exit(fleet_engine::cli::main(&["mcp".to_string()]));
+    if args.first().map(String::as_str) == Some("memory") && args.len() == 1 {
+        std::process::exit(fleet_engine::cli::main(&["memory".into(), "recent".into()]));
     }
-    if args.first().map(String::as_str) == Some("skills") {
-        let mut forwarded = vec!["skills".to_string()];
-        if args.len() == 1 {
-            forwarded.push("list".to_string());
-        } else {
-            forwarded.extend_from_slice(&args[1..]);
-        }
+    if matches!(args.first().map(String::as_str), Some("web" | "gui")) {
+        let mut forwarded = vec!["console".to_string()];
+        forwarded.extend_from_slice(&args[1..]);
         std::process::exit(fleet_engine::cli::main(&forwarded));
     }
+
+    std::process::exit(fleet_engine::cli::main(&args));
+}
+
+fn run_legacy_v4(raw_args: &[String]) {
+    let args: Vec<String> = raw_args.to_vec();
     let mut state = load_or_init_fleet_state();
 
     if args.is_empty() {

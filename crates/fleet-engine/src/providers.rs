@@ -88,6 +88,9 @@ pub struct ProviderSpec {
     pub binary: String,
     /// Argument template. Placeholders: `{model}`, `{effort}`, `{prompt}`, `{worktree}`.
     pub args: Vec<String>,
+    /// Extra arguments appended when resuming a previous session on the same provider (`{session_id}`).
+    #[serde(default)]
+    pub resume_args: Vec<String>,
     pub prompt_via: PromptVia,
     pub output: OutputFormat,
     pub models: Vec<ModelSpec>,
@@ -123,6 +126,7 @@ impl ProviderSpec {
             display_name: id.into(),
             binary: binary.into(),
             args: args.iter().map(|s| s.to_string()).collect(),
+            resume_args: vec![],
             prompt_via: PromptVia::Stdin,
             output: OutputFormat::Text,
             models,
@@ -169,6 +173,7 @@ pub fn default_providers() -> Vec<ProviderSpec> {
     );
     claude.display_name = "Claude Code".into();
     claude.output = OutputFormat::ClaudeStreamJson;
+    claude.resume_args = vec!["--resume".into(), "{session_id}".into()];
     claude.notes = "Flags verified against `claude --help` (2.x). `acceptEdits` lets Claude edit files but not run \
         arbitrary shell commands; switch to `bypassPermissions` only if you accept that risk inside the worktree."
         .into();
@@ -334,9 +339,21 @@ pub fn build_invocation(
     prompt: &str,
     worktree: &Path,
 ) -> Invocation {
+    build_invocation_with_session(spec, program, model, effort, prompt, worktree, None)
+}
+
+pub fn build_invocation_with_session(
+    spec: &ProviderSpec,
+    program: &Path,
+    model: &str,
+    effort: Effort,
+    prompt: &str,
+    worktree: &Path,
+    resume_session: Option<&str>,
+) -> Invocation {
     let effort_value = spec.effort_value(effort);
     let wt = worktree.to_string_lossy();
-    let args = spec
+    let mut args: Vec<String> = spec
         .args
         .iter()
         .map(|a| {
@@ -348,6 +365,13 @@ pub fn build_invocation(
             }
         })
         .collect();
+    if let Some(sid) = resume_session.filter(|s| !s.trim().is_empty()) {
+        if !spec.resume_args.is_empty() {
+            for ra in &spec.resume_args {
+                args.push(ra.replace("{session_id}", sid));
+            }
+        }
+    }
     Invocation {
         program: program.to_path_buf(),
         args,
@@ -752,6 +776,9 @@ mod tests {
         assert!(inv.args.windows(2).any(|w| w[0] == "--model" && w[1] == "opus"));
         assert!(inv.args.windows(2).any(|w| w[0] == "--effort" && w[1] == "xhigh"));
         assert_eq!(inv.stdin.as_deref(), Some("do it"));
+
+        let inv_res = build_invocation_with_session(&spec, Path::new("claude"), "opus", Effort::High, "continue", Path::new("/w"), Some("sess-99"));
+        assert!(inv_res.args.windows(2).any(|w| w[0] == "--resume" && w[1] == "sess-99"));
 
         let codex = default_providers().remove(1);
         let inv = build_invocation(&codex, Path::new("codex"), "soul", Effort::Max, "x", Path::new("/w"));

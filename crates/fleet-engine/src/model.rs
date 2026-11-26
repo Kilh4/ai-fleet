@@ -369,6 +369,8 @@ pub struct Task {
     pub last_provider: Option<String>,
     pub last_model: Option<String>,
     pub last_effort: Option<String>,
+    #[serde(default)]
+    pub last_session_id: Option<String>,
     pub last_failure: Option<String>,
     pub last_error: Option<String>,
     pub result_summary: Option<String>,

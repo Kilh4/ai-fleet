@@ -1,4 +1,5 @@
-//! `ai-fleet engine ...` command line.
+//! `ai-fleet` primary CLI — connected directly to SQLite `engine.db`, `memory.db`,
+//! `axum` HTTP+SSE server, `ratatui` interactive TUI, MCP server, and 120 embedded skills.
 
 use crate::engine::{Engine, EngineConfig};
 use crate::git;
@@ -6,26 +7,36 @@ use crate::intelligence::{audit_file_list, CodeGraph};
 use crate::mcp;
 use crate::memory::{MemoryKind, NewMemory};
 use crate::model::{Complexity, NewTask, Task};
-use crate::queen;
+use crate::providers::{default_providers, resolve_binary};
 use crate::router::Role;
 use crate::skills::SkillRegistry;
+use crate::tui;
 use crate::web;
 use clap::{Args, Parser, Subcommand};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
 #[derive(Parser)]
-#[command(name = "ai-fleet engine", about = "Real multi-AI execution engine (persistent queue, quota failover, independent review)")]
+#[command(
+    name = "ai-fleet",
+    version,
+    about = "Real multi-AI orchestration engine (SQLite WAL queue, Git worktree handoffs, independent review, axum SSE, ratatui TUI, 120 skills)"
+)]
 struct Cli {
     /// Repository to operate on (defaults to the git repo containing the current directory).
     #[arg(long, global = true)]
     repo: Option<PathBuf>,
     #[command(subcommand)]
-    cmd: Cmd,
+    cmd: Option<Cmd>,
 }
 
 #[derive(Subcommand)]
 enum Cmd {
+    /// Real-time status from SQLite (`engine.db`, `memory.db`, providers, event hash chain).
+    Status,
+    /// Interactive full-screen Terminal UI (`ratatui` + `crossterm`).
+    Tui,
     /// Queue a task.
     Submit(TaskArgs),
     /// Queue a task and run the engine until there is nothing left to do.
@@ -70,9 +81,12 @@ enum Cmd {
         #[command(subcommand)]
         cmd: SkillsCmd,
     },
-    /// Decompose a high-level epic into a cycle-free, file-disjoint multi-wave DAG.
+    /// Decompose a high-level epic into a cycle-free, file-disjoint multi-wave DAG (Live AI by default, `--offline` for CodeGraph fallback).
     Queen {
         epic: String,
+        /// Use deterministic CodeGraph + SkillRegistry decomposition without invoking a live AI CLI.
+        #[arg(long)]
+        offline: bool,
         /// Enqueue all planned waves into SQLite.
         #[arg(long)]
         submit: bool,
@@ -86,7 +100,7 @@ enum Cmd {
         #[command(flatten)]
         run: RunArgs,
     },
-    /// Persistent Hybrid FTS5 + 128-D Vector + Reflexion Memory.
+    /// Persistent Hybrid FTS5 + 128-D Feature-Hashed Vector + Reflexion Memory.
     Memory {
         #[command(subcommand)]
         cmd: MemoryCmd,
@@ -105,7 +119,7 @@ enum Cmd {
     },
     /// Start the real 15-tool JSON-RPC 2.0 MCP server over stdio.
     Mcp,
-    /// Start the live SQLite-backed Mission Control Web Console.
+    /// Start the live SQLite-backed `axum` HTTP + SSE Web Console.
     Console {
         #[arg(long, default_value = "127.0.0.1:7878")]
         bind: String,
@@ -217,7 +231,7 @@ struct RunArgs {
 }
 
 pub fn main(args: &[String]) -> i32 {
-    let argv = std::iter::once("ai-fleet engine".to_string()).chain(args.iter().cloned());
+    let argv = std::iter::once("ai-fleet".to_string()).chain(args.iter().cloned());
     let cli = match Cli::try_parse_from(argv) {
         Ok(c) => c,
         Err(e) => {
@@ -346,7 +360,9 @@ async fn run(cli: Cli) -> crate::Result<i32> {
         Some(r) => r.clone(),
         None => std::env::current_dir()?,
     };
-    if let Cmd::Skills { cmd } = &cli.cmd {
+    let cmd = cli.cmd.unwrap_or(Cmd::Status);
+
+    if let Cmd::Skills { cmd } = &cmd {
         let maybe_repo = git::repo_root(&dir).ok();
         let reg = SkillRegistry::load(maybe_repo.as_deref());
         return match cmd {
@@ -407,23 +423,107 @@ async fn run(cli: Cli) -> crate::Result<i32> {
         };
     }
 
-    if let Cmd::Mcp = &cli.cmd {
+    if let Cmd::Mcp = &cmd {
         mcp::serve_stdio(&dir)?;
         return Ok(0);
     }
-    if let Cmd::Console { bind } = &cli.cmd {
-        web::serve_http(&dir, bind)?;
+    if let Cmd::Console { bind } = &cmd {
+        web::serve_http_async(&dir, bind).await?;
+        return Ok(0);
+    }
+    if matches!(cmd, Cmd::Status) && git::repo_root(&dir).is_err() {
+        let reg = SkillRegistry::load(None);
+        println!("AI-Fleet — Real Execution Engine (not inside a Git repository: {})", dir.display());
+        println!("Embedded Skills: {}", reg.len());
+        println!("Detected CLI Binaries on PATH:");
+        for p in default_providers() {
+            let resolved = resolve_binary(&p.binary).map(|b| b.display().to_string()).unwrap_or_else(|| "NOT INSTALLED".into());
+            println!("  - {:<14} ({}) -> {}", p.id, p.binary, resolved);
+        }
+        println!("\nRun inside a Git repository (or pass `--repo <path>`) to open SQLite `engine.db`.");
         return Ok(0);
     }
 
     let mut cfg = EngineConfig::load(&dir)?;
-    match &cli.cmd {
+    match &cmd {
         Cmd::Run(r) | Cmd::Do { run: r, .. } | Cmd::Queen { run: r, .. } => apply_run_args(&mut cfg, r),
         _ => {}
     }
     let engine = Engine::open(cfg)?;
 
-    match cli.cmd {
+    match cmd {
+        Cmd::Status => {
+            let repo = engine.config().repo.clone();
+            let head = git::head(&repo).unwrap_or_else(|_| "unknown".into());
+            let tasks = engine.store().list_tasks()?;
+            let runs = engine.store().recent_runs(10)?;
+            let mem_count = engine.memory().count().unwrap_or(0);
+            let ev_check = engine.store().verify_events()?;
+            let mut by_status: BTreeMap<&str, usize> = BTreeMap::new();
+            for t in &tasks {
+                *by_status.entry(t.status.as_str()).or_default() += 1;
+            }
+
+            println!("AI-Fleet — Real SQLite Execution Engine");
+            println!("  repository:  {} (HEAD {})", repo.display(), &head[..head.len().min(10)]);
+            println!("  sqlite db:   {}", engine.config().state_dir.join("engine.db").display());
+            println!("  memory db:   {} ({mem_count} record(s))", engine.config().state_dir.join("memory.db").display());
+            println!("  skills:      {} embedded skill(s)", engine.skills().len());
+            match ev_check {
+                Ok(n) => println!("  event chain: intact ({n} SHA-256 chained event(s))"),
+                Err(bad) => println!("  event chain: TAMPERED at event #{bad}"),
+            }
+
+            println!("\nProviders (`providers.json`):");
+            for p in engine.provider_reports()? {
+                let state = if !p.enabled {
+                    "DISABLED".to_string()
+                } else if let Some(u) = &p.cooldown_until {
+                    format!("COOLDOWN until {u} ({})", p.cooldown_reason.unwrap_or_default())
+                } else if p.resolved.is_some() {
+                    "READY".to_string()
+                } else {
+                    "NOT INSTALLED".to_string()
+                };
+                println!(
+                    "  - {:<13} {:<18} binary={}",
+                    p.id,
+                    state,
+                    p.resolved.as_deref().unwrap_or("not on PATH")
+                );
+            }
+
+            println!("\nTasks in SQLite (`engine.db`): {} total {:?}", tasks.len(), by_status);
+            if tasks.is_empty() {
+                println!("  (empty — submit real work with `ai-fleet do \"<prompt>\"` or `ai-fleet queen \"<epic>\" --submit`)");
+            } else {
+                for t in tasks.iter().take(15) {
+                    print_task_row(t);
+                }
+            }
+            if !runs.is_empty() {
+                println!("\nRecent runs ({}):", runs.len());
+                for r in runs.iter().take(5) {
+                    println!(
+                        "  #{:<4} {:<28} {:<8} {}/{} effort={} -> {} ({}ms)",
+                        r.id,
+                        short(&r.task_id, 27),
+                        r.role,
+                        r.provider,
+                        r.model,
+                        r.effort,
+                        r.failure_kind.as_deref().or(r.outcome.as_deref()).unwrap_or("running"),
+                        r.duration_ms.unwrap_or(0)
+                    );
+                }
+            }
+            println!("\nInteractive views: `ai-fleet tui` (ratatui) | `ai-fleet console` (axum HTTP+SSE) | `ai-fleet --help`");
+            Ok(0)
+        }
+        Cmd::Tui => {
+            tui::run_interactive_tui(engine).await?;
+            Ok(0)
+        }
         Cmd::Init => {
             println!("providers: {}", engine.config().providers_path().display());
             println!("database:  {}", engine.config().state_dir.join("engine.db").display());
@@ -443,7 +543,7 @@ async fn run(cli: Cli) -> crate::Result<i32> {
         Cmd::List => {
             let tasks = engine.store().list_tasks()?;
             if tasks.is_empty() {
-                println!("no tasks. Queue one with: ai-fleet engine submit \"...\"");
+                println!("no tasks in engine.db. Queue one with: ai-fleet submit \"...\"");
             }
             for t in &tasks {
                 print_task_row(t);
@@ -545,10 +645,8 @@ async fn run(cli: Cli) -> crate::Result<i32> {
             }
             Ok(0)
         }
-        Cmd::Queen { epic, submit, execute: exec_now, verify, no_review, run } => {
-            let repo = engine.config().repo.clone();
-            let graph = CodeGraph::scan(&repo, 800)?;
-            let plan = queen::decompose_architecturally(&epic, &repo, &graph, engine.skills(), verify)?;
+        Cmd::Queen { epic, offline, submit, execute: exec_now, verify, no_review, run } => {
+            let plan = engine.plan_epic(&epic, offline, verify).await?;
             println!("Queen Plan ({}) — {} task(s) across {} wave(s)", plan.planner_source, plan.nodes.len(), plan.waves);
             if let Some(v) = &plan.detected_verify_cmd {
                 println!("  verification gate: `{v}`");

@@ -26,6 +26,7 @@ pub mod queen;
 pub mod router;
 pub mod skills;
 pub mod store;
+pub mod tui;
 pub mod web;
 
 pub use engine::{Engine, EngineConfig, EngineEvent, ProviderReport, RunSummary};

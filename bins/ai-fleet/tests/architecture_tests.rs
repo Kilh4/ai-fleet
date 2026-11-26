@@ -120,6 +120,8 @@ fn bounded_context_crates_enforce_inward_ddd_layer_rule() {
         "fleet-neural",
         "fleet-workflows",
         "fleet-federation",
+        "fleet-memory",
+        "fleet-agents",
     ];
     for c in ddd_crates {
         let src = root.join("crates").join(c).join("src");

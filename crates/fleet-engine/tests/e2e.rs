@@ -597,5 +597,48 @@ fn mcp_jsonrpc_executes_real_sqlite_memory_graph_and_skills_tools() {
     assert!(!queen_res["submitted_task_ids"].as_array().unwrap().is_empty());
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn session_id_persists_and_passes_resume_flag_on_same_provider_retry() {
+    let env = Env::new();
+    let mut alpha = env.provider("alpha", "claude-session-fail,claude-session-ok:resumed.txt");
+    alpha.output = OutputFormat::ClaudeStreamJson;
+    alpha.resume_args = vec!["--resume".into(), "{session_id}".into()];
+    let engine = env.engine(vec![alpha]);
+
+    let mut nt = task("session resume task");
+    nt.review = false;
+    nt.verify_cmd = Some(verify_file_exists("resumed.txt"));
+    let t = engine.submit(nt).unwrap();
+
+    let summary = engine.run_until_idle().await.unwrap();
+    assert_eq!(summary.done, vec![t.id.clone()], "{summary:?}");
+
+    let stored = engine.store().get_task(&t.id).unwrap().unwrap();
+    assert_eq!(stored.last_session_id.as_deref(), Some("sess-live-42"));
+
+    let prompts = env.prompts("alpha");
+    assert!(
+        prompts.contains("\"--resume\", \"sess-live-42\""),
+        "second attempt on same provider must pass --resume sess-live-42, got:\n{prompts}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn live_queen_invokes_ready_provider_and_parses_ai_dag() {
+    let env = Env::new();
+    let alpha = env.provider("alpha", "queen-json");
+    let engine = env.engine(vec![alpha]);
+
+    let plan = engine
+        .plan_epic("Build double-entry ledger schema and service slice", false, None)
+        .await
+        .unwrap();
+    assert_eq!(plan.planner_source, "live-ai:alpha/large");
+    assert_eq!(plan.nodes.len(), 2);
+    assert_eq!(plan.waves, 2);
+    assert_eq!(plan.nodes[0].key, "schema");
+    assert_eq!(plan.nodes[1].key, "impl");
+}
+
 #[allow(dead_code)]
 fn _unused(_: PathBuf) {}
