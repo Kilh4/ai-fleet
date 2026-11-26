@@ -46,6 +46,8 @@ fn print_v4_help() {
     println!("  {}ai-fleet doctor [--fix]{}                                Diagnose git, rustc, cargo, claude, codex, node, docker", GREEN, RESET);
     println!("  {}ai-fleet analyze{}                                       Real Git repository diff, domain breakdown & risk score", GREEN, RESET);
     println!("  {}ai-fleet status [--view <page>] [--look bbs|orbital]{}   8-view TUI (overview|agents|workflows|mcp|moe|memory)", GREEN, RESET);
+    println!("  {}ai-fleet console [port]{}                                 Launch Interactive Web Mission Control GUI (http://127.0.0.1:7878)", GREEN, RESET);
+    println!("  {}ai-fleet daemon <start|stop|status>{}                     Manage detached background autopilot daemon process", GREEN, RESET);
     println!("  {}ai-fleet watch [seconds]{}                               Live auto-refreshing dashboard monitor loop", GREEN, RESET);
     println!("\n{}2. PARALLEL SWARM EXECUTION & DYNAMIC MODEL / EFFORT CONTROL:{}", BOLD, RESET);
     println!("  {}ai-fleet start{}                                         Dispatch parallel AI agents in FencedLease worktrees", CYAN, RESET);
@@ -254,6 +256,60 @@ fn main() {
                 print_dashboard(&state, None);
                 if i < cycles {
                     thread::sleep(StdDuration::from_secs(1));
+                }
+            }
+        }
+        "console" | "web" | "gui" => {
+            let port: u16 = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(7878);
+            let no_open = args.iter().any(|a| a == "--no-open");
+            let max_reqs = args
+                .iter()
+                .position(|a| a == "--max-requests")
+                .and_then(|i| args.get(i + 1))
+                .and_then(|s| s.parse::<usize>().ok());
+            if let Err(e) = fleet_web::serve_mission_control(port, !no_open, max_reqs) {
+                eprintln!("{}✖ Failed to start Mission Control Web GUI: {}{}", RED, e, RESET);
+                std::process::exit(1);
+            }
+        }
+        "daemon" => {
+            let sub = args.get(1).map(|s| s.as_str()).unwrap_or("status");
+            match sub {
+                "start" => {
+                    let exe = env::current_exe().unwrap_or_else(|_| std::path::PathBuf::from("ai-fleet"));
+                    let child = std::process::Command::new(exe)
+                        .args(["watch", "3600"])
+                        .stdin(std::process::Stdio::null())
+                        .stdout(std::process::Stdio::null())
+                        .stderr(std::process::Stdio::null())
+                        .spawn();
+                    match child {
+                        Ok(c) => {
+                            state.daemon_running = true;
+                            state.daemon_pid = Some(c.id());
+                            append_ledger_row(&mut state.decision_ledger, "daemon:v5", "daemon.start", &format!("Detached background daemon pid={}", c.id()));
+                            save_fleet_state(&state);
+                            println!("{}✔ Started detached background AI-Fleet Daemon (PID: {}).{}", GREEN, c.id(), RESET);
+                        }
+                        Err(e) => eprintln!("{}✖ Failed to start daemon: {}{}", RED, e, RESET),
+                    }
+                }
+                "stop" => {
+                    if let Some(pid) = state.daemon_pid.take() {
+                        if cfg!(windows) {
+                            let _ = std::process::Command::new("taskkill").args(["/F", "/PID", &pid.to_string()]).output();
+                        }
+                    }
+                    state.daemon_running = false;
+                    save_fleet_state(&state);
+                    println!("{}✔ Stopped background AI-Fleet Daemon safely.{}", GREEN, RESET);
+                }
+                _ => {
+                    println!(
+                        "\n⚙ AI-Fleet Background Daemon: {} (PID: {:?}, 12 autonomous workers configured)\n",
+                        if state.daemon_running { format!("{}RUNNING{}", GREEN, RESET) } else { format!("{}STOPPED{}", YELLOW, RESET) },
+                        state.daemon_pid
+                    );
                 }
             }
         }

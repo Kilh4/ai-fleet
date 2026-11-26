@@ -15,6 +15,7 @@ members = [
     "crates/fleet-providers",
     "crates/fleet-mcp",
     "crates/fleet-tui",
+    "crates/fleet-web",
     "crates/ruflo-agntcy",
     "crates/ruflo-watermark",
     "bins/ai-fleet",
@@ -48,5 +49,6 @@ fleet-hooks = { path = "crates/fleet-hooks" }
 fleet-providers = { path = "crates/fleet-providers" }
 fleet-mcp = { path = "crates/fleet-mcp" }
 fleet-tui = { path = "crates/fleet-tui" }
+fleet-web = { path = "crates/fleet-web" }
 ruflo-agntcy = { path = "crates/ruflo-agntcy" }
 ruflo-watermark = { path = "crates/ruflo-watermark" }

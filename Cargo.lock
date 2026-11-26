@@ -29,6 +29,7 @@ dependencies = [
  "fleet-security",
  "fleet-swarm",
  "fleet-tui",
+ "fleet-web",
  "fleet-workflows",
  "ruflo-agntcy",
  "ruflo-watermark",
@@ -388,6 +389,28 @@ dependencies = [
  "fleet-mcp",
  "fleet-memory",
  "fleet-neural",
+ "fleet-providers",
+ "fleet-security",
+ "fleet-swarm",
+ "fleet-workflows",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "fleet-web"
+version = "4.0.0"
+dependencies = [
+ "chrono",
+ "fleet-agents",
+ "fleet-analyzer",
+ "fleet-core",
+ "fleet-federation",
+ "fleet-hooks",
+ "fleet-mcp",
+ "fleet-memory",
+ "fleet-neural",
+ "fleet-plugins",
  "fleet-providers",
  "fleet-security",
  "fleet-swarm",
