@@ -75,12 +75,34 @@ fn print_v4_help() {
     println!("  {}ai-fleet casa <action>{}                                 Evaluate CASA (ADR-380 §3) deny-by-default envelope", YELLOW, RESET);
     println!("  {}ai-fleet federate <peer> <payload>{}                     Strip PII/secrets & embed Gumbel-Softmax watermark", YELLOW, RESET);
     println!("  {}ai-fleet mcp <start|tools|exec <tool> <json>>{}          Start JSON-RPC 2.0 MCP server over stdio or invoke tool", YELLOW, RESET);
+    println!("  {}ai-fleet engine <do|submit|run|queen|memory|graph|audit>{} Real async multi-AI SQLite engine, Queen DAG & Static Gate", YELLOW, RESET);
+    println!("  {}ai-fleet skills <list|match|show>{}                      Browse & match the 120 Elite GitHub Agent Skills", YELLOW, RESET);
+    println!("  {}ai-fleet graph [--blast <file>] | ai-fleet audit{}       CodeGraph PageRank/SCC analyzer & IEEE-754 Money/RLS Gate", YELLOW, RESET);
     println!("  {}ai-fleet policy verify{}                                 Verify SHA-256 hash-chained decision ledger & TruthAnchors\n", YELLOW, RESET);
 }
 
 fn main() {
     enable_ansi_support();
     let args: Vec<String> = env::args().skip(1).collect();
+    // Real execution engine (persistent queue, quota failover, Queen DAG, FTS5+Vector Memory, CodeGraph, Static Gate, 120 elite skills).
+    if args.first().map(String::as_str) == Some("engine") {
+        std::process::exit(fleet_engine::cli::main(&args[1..]));
+    }
+    if matches!(args.first().map(String::as_str), Some("graph" | "audit")) {
+        std::process::exit(fleet_engine::cli::main(&args));
+    }
+    if args.first().map(String::as_str) == Some("mcp") && args.get(1).map(String::as_str) == Some("engine") {
+        std::process::exit(fleet_engine::cli::main(&["mcp".to_string()]));
+    }
+    if args.first().map(String::as_str) == Some("skills") {
+        let mut forwarded = vec!["skills".to_string()];
+        if args.len() == 1 {
+            forwarded.push("list".to_string());
+        } else {
+            forwarded.extend_from_slice(&args[1..]);
+        }
+        std::process::exit(fleet_engine::cli::main(&forwarded));
+    }
     let mut state = load_or_init_fleet_state();
 
     if args.is_empty() {

@@ -1,0 +1,1699 @@
+[
+  {
+    "id": "systematic-debugging",
+    "title": "Systematic Debugging",
+    "domain": "software-engineering",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 9829
+  },
+  {
+    "id": "verification-before-completion",
+    "title": "Verification Before Completion",
+    "domain": "software-engineering",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 3976
+  },
+  {
+    "id": "test-driven-development",
+    "title": "Test-Driven Development (TDD)",
+    "domain": "software-engineering",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 9893
+  },
+  {
+    "id": "api-and-interface-design",
+    "title": "API and Interface Design",
+    "domain": "software-engineering",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 15247
+  },
+  {
+    "id": "code-simplification",
+    "title": "Code Simplification",
+    "domain": "software-engineering",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 13844
+  },
+  {
+    "id": "performance-optimization",
+    "title": "Performance Optimization",
+    "domain": "software-engineering",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 17048
+  },
+  {
+    "id": "constraint-driven-development",
+    "title": "Constraint-Driven Development",
+    "domain": "software-engineering",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 21893
+  },
+  {
+    "id": "debugging-and-error-recovery",
+    "title": "Debugging and Error Recovery",
+    "domain": "software-engineering",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 11140
+  },
+  {
+    "id": "incremental-implementation",
+    "title": "Incremental Implementation",
+    "domain": "software-engineering",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 9851
+  },
+  {
+    "id": "memory-safety-patterns",
+    "title": "Memory Safety Patterns",
+    "domain": "software-engineering",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "ts",
+      "py",
+      "cs",
+      "go"
+    ],
+    "bytes": 2892
+  },
+  {
+    "id": "hexagonal-architecture",
+    "title": "Hexagonal Architecture",
+    "domain": "architecture",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 11637
+  },
+  {
+    "id": "architecture-decision-records",
+    "title": "Architecture Decision Records",
+    "domain": "architecture",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 7411
+  },
+  {
+    "id": "engineering-software-architect",
+    "title": "Software Architect Agent",
+    "domain": "architecture",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 6705
+  },
+  {
+    "id": "engineering-backend-architect",
+    "title": "Backend Architect Agent Personality",
+    "domain": "architecture",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 11686
+  },
+  {
+    "id": "engineering-multi-agent-systems-architect",
+    "title": "🕸️ Multi-Agent Systems Architect Agent",
+    "domain": "architecture",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 29455
+  },
+  {
+    "id": "graphify",
+    "title": "/graphify",
+    "domain": "architecture",
+    "source_repo": "Graphify-Labs/graphify",
+    "stars": 153619,
+    "license": "Apache-2.0",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 51089
+  },
+  {
+    "id": "documentation-and-adrs",
+    "title": "Documentation and ADRs",
+    "domain": "architecture",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 12705
+  },
+  {
+    "id": "cqrs-implementation",
+    "title": "CQRS Implementation",
+    "domain": "architecture",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 3749
+  },
+  {
+    "id": "event-store-design",
+    "title": "Event Store Design",
+    "domain": "architecture",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 4448
+  },
+  {
+    "id": "saga-orchestration",
+    "title": "Saga Orchestration",
+    "domain": "architecture",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "rs",
+      "cs",
+      "go",
+      "ts",
+      "sql"
+    ],
+    "bytes": 6057
+  },
+  {
+    "id": "brainstorming",
+    "title": "Brainstorming",
+    "domain": "thinking-wisdom",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 15471
+  },
+  {
+    "id": "writing-plans",
+    "title": "Writing Plans",
+    "domain": "thinking-wisdom",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 10619
+  },
+  {
+    "id": "executing-plans",
+    "title": "Executing Plans",
+    "domain": "thinking-wisdom",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 18654
+  },
+  {
+    "id": "dispatching-parallel-agents",
+    "title": "Dispatching Parallel Agents",
+    "domain": "thinking-wisdom",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 6405
+  },
+  {
+    "id": "subagent-driven-development",
+    "title": "Subagent-Driven Development",
+    "domain": "thinking-wisdom",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 20067
+  },
+  {
+    "id": "ponytail",
+    "title": "Ponytail",
+    "domain": "thinking-wisdom",
+    "source_repo": "DietrichGebert/ponytail",
+    "stars": 199088,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 3474
+  },
+  {
+    "id": "doubt-driven-development",
+    "title": "Doubt-Driven Development",
+    "domain": "thinking-wisdom",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 16833
+  },
+  {
+    "id": "context-engineering",
+    "title": "Context Engineering",
+    "domain": "thinking-wisdom",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 15823
+  },
+  {
+    "id": "scientific-critical-thinking",
+    "title": "Scientific Critical Thinking",
+    "domain": "thinking-wisdom",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 13088
+  },
+  {
+    "id": "first-principles-thinking",
+    "title": "First Principles Thinking",
+    "domain": "thinking-wisdom",
+    "source_repo": "VoltAgent/awesome-claude-code-subagents",
+    "stars": 38000,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 4472
+  },
+  {
+    "id": "requesting-code-review",
+    "title": "Requesting Code Review",
+    "domain": "principal-experience",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 3289
+  },
+  {
+    "id": "receiving-code-review",
+    "title": "Code Review Reception",
+    "domain": "principal-experience",
+    "source_repo": "obra/superpowers",
+    "stars": 327046,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 6515
+  },
+  {
+    "id": "agent-architecture-audit",
+    "title": "Agent Architecture Audit",
+    "domain": "principal-experience",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 10284
+  },
+  {
+    "id": "production-audit",
+    "title": "Production Audit",
+    "domain": "principal-experience",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 7934
+  },
+  {
+    "id": "ponytail-review",
+    "title": "Ponytail Review",
+    "domain": "principal-experience",
+    "source_repo": "DietrichGebert/ponytail",
+    "stars": 199088,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 5208
+  },
+  {
+    "id": "ponytail-debt",
+    "title": "Ponytail Debt",
+    "domain": "principal-experience",
+    "source_repo": "DietrichGebert/ponytail",
+    "stars": 199088,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 1971
+  },
+  {
+    "id": "engineering-sre",
+    "title": "SRE (Site Reliability Engineer) Agent",
+    "domain": "principal-experience",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 4076
+  },
+  {
+    "id": "engineering-incident-response-commander",
+    "title": "Incident Response Commander Agent",
+    "domain": "principal-experience",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 21440
+  },
+  {
+    "id": "code-review-and-quality",
+    "title": "Code Review and Quality",
+    "domain": "principal-experience",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 21842
+  },
+  {
+    "id": "observability-and-instrumentation",
+    "title": "Observability and Instrumentation",
+    "domain": "principal-experience",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [],
+    "bytes": 14237
+  },
+  {
+    "id": "ui-ux-pro-max",
+    "title": "UI/UX Pro Max - Design Intelligence",
+    "domain": "design-ui-ux",
+    "source_repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+    "stars": 154453,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 18725
+  },
+  {
+    "id": "design-system",
+    "title": "Design System",
+    "domain": "design-ui-ux",
+    "source_repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+    "stars": 154453,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 7640
+  },
+  {
+    "id": "ui-styling",
+    "title": "UI Styling Skill",
+    "domain": "design-ui-ux",
+    "source_repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+    "stars": 154453,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 10910
+  },
+  {
+    "id": "taste-skill",
+    "title": "tasteskill 2.5",
+    "domain": "design-ui-ux",
+    "source_repo": "Leonxlnx/taste-skill",
+    "stars": 121797,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 29194
+  },
+  {
+    "id": "frontend-ui-engineering",
+    "title": "Frontend UI Engineering",
+    "domain": "design-ui-ux",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 12843
+  },
+  {
+    "id": "accessibility-engineering",
+    "title": "Accessibility Engineering",
+    "domain": "design-ui-ux",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 8163
+  },
+  {
+    "id": "impeccable",
+    "title": "Impeccable",
+    "domain": "design-ui-ux",
+    "source_repo": "pbakaus/impeccable",
+    "stars": 117230,
+    "license": "Apache-2.0",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 12806
+  },
+  {
+    "id": "design-ux-architect",
+    "title": "ArchitectUX Agent Personality",
+    "domain": "design-ui-ux",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 16491
+  },
+  {
+    "id": "apple-design",
+    "title": "Apple Design",
+    "domain": "design-ui-ux",
+    "source_repo": "emilkowalski/skills",
+    "stars": 59836,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 22964
+  },
+  {
+    "id": "animation-performance",
+    "title": "Animation Performance",
+    "domain": "design-ui-ux",
+    "source_repo": "emilkowalski/skills",
+    "stars": 59836,
+    "license": "MIT",
+    "extensions": [
+      "tsx",
+      "jsx",
+      "css",
+      "scss",
+      "vue",
+      "svelte"
+    ],
+    "bytes": 14027
+  },
+  {
+    "id": "rust-patterns",
+    "title": "Patrones de Desarrollo Rust",
+    "domain": "languages",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "rs"
+    ],
+    "bytes": 14390
+  },
+  {
+    "id": "rust-async-patterns",
+    "title": "Rust Async Patterns",
+    "domain": "languages",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "rs"
+    ],
+    "bytes": 2943
+  },
+  {
+    "id": "typescript-patterns",
+    "title": "TypeScript Development Patterns",
+    "domain": "languages",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "ts",
+      "tsx"
+    ],
+    "bytes": 23795
+  },
+  {
+    "id": "typescript-advanced-types",
+    "title": "TypeScript Advanced Types",
+    "domain": "languages",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "ts",
+      "tsx"
+    ],
+    "bytes": 8258
+  },
+  {
+    "id": "dotnet-patterns",
+    "title": ".NET Development Patterns",
+    "domain": "languages",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "cs",
+      "csproj"
+    ],
+    "bytes": 9519
+  },
+  {
+    "id": "dotnet-backend-patterns",
+    "title": ".NET Backend Development Patterns",
+    "domain": "languages",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "cs",
+      "csproj"
+    ],
+    "bytes": 26664
+  },
+  {
+    "id": "python-patterns",
+    "title": "Python Geliştirme Desenleri",
+    "domain": "languages",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "py"
+    ],
+    "bytes": 17800
+  },
+  {
+    "id": "golang-patterns",
+    "title": "Patrones de Desarrollo Go",
+    "domain": "languages",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "go"
+    ],
+    "bytes": 14916
+  },
+  {
+    "id": "postgres-patterns",
+    "title": "Patrones PostgreSQL",
+    "domain": "languages",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "sql"
+    ],
+    "bytes": 4361
+  },
+  {
+    "id": "cpp-coding-standards",
+    "title": "C++ Coding Standards (C++ Core Guidelines)",
+    "domain": "languages",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "cpp",
+      "cc",
+      "h",
+      "hpp"
+    ],
+    "bytes": 22567
+  },
+  {
+    "id": "finance-billing-ops",
+    "title": "Finance Billing Ops",
+    "domain": "accounting-erp",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 4109
+  },
+  {
+    "id": "finance-bookkeeper-controller",
+    "title": "📒 Bookkeeper & Controller Agent",
+    "domain": "accounting-erp",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 15444
+  },
+  {
+    "id": "chief-financial-officer",
+    "title": "💼 Chief Financial Officer Agent",
+    "domain": "accounting-erp",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 18698
+  },
+  {
+    "id": "finance-financial-analyst",
+    "title": "📊 Financial Analyst Agent",
+    "domain": "accounting-erp",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 13642
+  },
+  {
+    "id": "finance-fpa-analyst",
+    "title": "📈 FP&A Analyst Agent",
+    "domain": "accounting-erp",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 16790
+  },
+  {
+    "id": "finance-tax-strategist",
+    "title": "🏛️ Tax Strategist Agent",
+    "domain": "accounting-erp",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 13893
+  },
+  {
+    "id": "engineering-payments-billing-engineer",
+    "title": "Payments & Billing Engineer",
+    "domain": "accounting-erp",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 15252
+  },
+  {
+    "id": "accounts-payable-agent",
+    "title": "Accounts Payable Agent Personality",
+    "domain": "accounting-erp",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 7820
+  },
+  {
+    "id": "party-ledger-reconciliation",
+    "title": "Party / Ledger Reconciliation",
+    "domain": "accounting-erp",
+    "source_repo": "sickn33/antigravity-awesome-skills",
+    "stars": 35000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 22268
+  },
+  {
+    "id": "accounting-audit-system-builder",
+    "title": "Accounting & Audit System Builder",
+    "domain": "accounting-erp",
+    "source_repo": "sickn33/antigravity-awesome-skills",
+    "stars": 35000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "cs",
+      "py",
+      "ts"
+    ],
+    "bytes": 13368
+  },
+  {
+    "id": "web-perimeter-owasp-2025-audit",
+    "title": "Web Perimeter Security Audit (OWASP Top 10:2025 Surface Leads)",
+    "domain": "auditing-security",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 19190
+  },
+  {
+    "id": "agent-security-hardening",
+    "title": "Agent Security Hardening",
+    "domain": "auditing-security",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 10864
+  },
+  {
+    "id": "security-review",
+    "title": "Skill de Revisión de Seguridad",
+    "domain": "auditing-security",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 13863
+  },
+  {
+    "id": "ponytail-audit",
+    "title": "Ponytail Audit",
+    "domain": "auditing-security",
+    "source_repo": "DietrichGebert/ponytail",
+    "stars": 199088,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 5505
+  },
+  {
+    "id": "ai-generated-code-security-auditor",
+    "title": "AI-Generated Code Security Auditor",
+    "domain": "auditing-security",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 17361
+  },
+  {
+    "id": "security-and-hardening",
+    "title": "Security and Hardening",
+    "domain": "auditing-security",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 17583
+  },
+  {
+    "id": "signed-audit-trails-recipe",
+    "title": "Signed Audit Trails for Claude Code Tool Calls",
+    "domain": "auditing-security",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 10732
+  },
+  {
+    "id": "stride-analysis-patterns",
+    "title": "STRIDE Analysis Patterns",
+    "domain": "auditing-security",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 2797
+  },
+  {
+    "id": "compliance-auditor",
+    "title": "Compliance Auditor",
+    "domain": "auditing-security",
+    "source_repo": "VoltAgent/awesome-claude-code-subagents",
+    "stars": 38000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 7178
+  },
+  {
+    "id": "postgresql-devsec",
+    "title": "PostgreSQL",
+    "domain": "auditing-security",
+    "source_repo": "sickn33/antigravity-awesome-skills",
+    "stars": 35000,
+    "license": "MIT",
+    "extensions": [
+      "sql",
+      "rs",
+      "cs",
+      "ts",
+      "py"
+    ],
+    "bytes": 11218
+  },
+  {
+    "id": "academic-statistician",
+    "title": "Statistician Agent Personality",
+    "domain": "mathematics",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 11743
+  },
+  {
+    "id": "sympy",
+    "title": "SymPy - Symbolic Mathematics in Python",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 13064
+  },
+  {
+    "id": "pymc",
+    "title": "PyMC Bayesian Modeling",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 10560
+  },
+  {
+    "id": "statsmodels",
+    "title": "Statsmodels: Statistical Modeling and Econometrics",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 12486
+  },
+  {
+    "id": "pymoo",
+    "title": "Pymoo - Multi-Objective Optimization in Python",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 14071
+  },
+  {
+    "id": "networkx",
+    "title": "NetworkX",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 16671
+  },
+  {
+    "id": "statistical-analysis",
+    "title": "Statistical Analysis",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 23359
+  },
+  {
+    "id": "statistical-power",
+    "title": "Statistical Power & Sample Size",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 17094
+  },
+  {
+    "id": "torch-geometric",
+    "title": "PyTorch Geometric (PyG)",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 22386
+  },
+  {
+    "id": "uncertainty-and-units",
+    "title": "Uncertainty and units",
+    "domain": "mathematics",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "rs",
+      "cpp"
+    ],
+    "bytes": 21137
+  },
+  {
+    "id": "qutip",
+    "title": "QuTiP 5",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 14700
+  },
+  {
+    "id": "qiskit",
+    "title": "Qiskit",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 13161
+  },
+  {
+    "id": "cirq",
+    "title": "Cirq - Quantum Computing with Python",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 13766
+  },
+  {
+    "id": "pennylane",
+    "title": "PennyLane",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 7016
+  },
+  {
+    "id": "astropy",
+    "title": "Astropy",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 16998
+  },
+  {
+    "id": "fluidsim",
+    "title": "FluidSim",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 13744
+  },
+  {
+    "id": "cantera",
+    "title": "Cantera: homogeneous ignition calculations",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 8565
+  },
+  {
+    "id": "pybamm",
+    "title": "PyBaMM battery experiments",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 7083
+  },
+  {
+    "id": "pycalphad",
+    "title": "pycalphad: TDB equilibrium calculations",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 8106
+  },
+  {
+    "id": "molecular-dynamics",
+    "title": "Molecular Dynamics",
+    "domain": "physics-simulation",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "cpp",
+      "rs"
+    ],
+    "bytes": 18937
+  },
+  {
+    "id": "prediction-market-risk-review",
+    "title": "Prediction Market Risk Review",
+    "domain": "economics-quant",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 2235
+  },
+  {
+    "id": "economy-designer",
+    "title": "Economy Designer Agent Personality",
+    "domain": "economics-quant",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 9096
+  },
+  {
+    "id": "finance-investment-researcher",
+    "title": "🔍 Investment Researcher Agent",
+    "domain": "economics-quant",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 15861
+  },
+  {
+    "id": "ab-testing",
+    "title": "A/B Test Setup",
+    "domain": "economics-quant",
+    "source_repo": "coreyhaines31/marketingskills",
+    "stars": 62748,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 13112
+  },
+  {
+    "id": "usfiscaldata",
+    "title": "U.S. Treasury Fiscal Data API",
+    "domain": "economics-quant",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 9597
+  },
+  {
+    "id": "timesfm-forecasting",
+    "title": "TimesFM Forecasting",
+    "domain": "economics-quant",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 9311
+  },
+  {
+    "id": "simpy",
+    "title": "SimPy",
+    "domain": "economics-quant",
+    "source_repo": "K-Dense-AI/claude-scientific-skills",
+    "stars": 58533,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 14359
+  },
+  {
+    "id": "backtesting-frameworks",
+    "title": "Backtesting Frameworks",
+    "domain": "economics-quant",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 3866
+  },
+  {
+    "id": "risk-metrics-calculation",
+    "title": "Risk Metrics Calculation",
+    "domain": "economics-quant",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 2371
+  },
+  {
+    "id": "pricing-strategy",
+    "title": "Pricing Strategy",
+    "domain": "economics-quant",
+    "source_repo": "sickn33/antigravity-awesome-skills",
+    "stars": 35000,
+    "license": "MIT",
+    "extensions": [
+      "py",
+      "sql",
+      "ts"
+    ],
+    "bytes": 7985
+  },
+  {
+    "id": "orch-add-feature",
+    "title": "orch-add-feature",
+    "domain": "product-features",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 2080
+  },
+  {
+    "id": "orch-change-feature",
+    "title": "orch-change-feature",
+    "domain": "product-features",
+    "source_repo": "affaan-m/ECC",
+    "stars": 311000,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 1997
+  },
+  {
+    "id": "product-manager",
+    "title": "🧭 Product Manager Agent",
+    "domain": "product-features",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 22779
+  },
+  {
+    "id": "product-sprint-prioritizer",
+    "title": "Product Sprint Prioritizer Agent",
+    "domain": "product-features",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 9669
+  },
+  {
+    "id": "product-behavioral-nudge-engine",
+    "title": "🧠 Behavioral Nudge Engine",
+    "domain": "product-features",
+    "source_repo": "msitarzewski/agency-agents",
+    "stars": 170333,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 5724
+  },
+  {
+    "id": "spec-driven-development",
+    "title": "Spec-Driven Development",
+    "domain": "product-features",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 16996
+  },
+  {
+    "id": "planning-and-task-breakdown",
+    "title": "Planning and Task Breakdown",
+    "domain": "product-features",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 11024
+  },
+  {
+    "id": "idea-refine",
+    "title": "Idea Refine",
+    "domain": "product-features",
+    "source_repo": "addyosmani/agent-skills",
+    "stars": 120523,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 9605
+  },
+  {
+    "id": "parallel-feature-development",
+    "title": "Parallel Feature Development",
+    "domain": "product-features",
+    "source_repo": "wshobson/agents",
+    "stars": 42000,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 6604
+  },
+  {
+    "id": "state-machine",
+    "title": "State machine",
+    "domain": "product-features",
+    "source_repo": "sickn33/antigravity-awesome-skills",
+    "stars": 35000,
+    "license": "MIT",
+    "extensions": [
+      "md",
+      "ts",
+      "rs",
+      "cs"
+    ],
+    "bytes": 8382
+  }
+]

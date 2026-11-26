@@ -13,6 +13,7 @@ members = [
     "crates/fleet-analyzer",
     "crates/fleet-hooks",
     "crates/fleet-providers",
+    "crates/fleet-engine",
     "crates/fleet-mcp",
     "crates/fleet-tui",
     "crates/fleet-web",
@@ -47,6 +48,7 @@ fleet-plugins = { path = "crates/fleet-plugins" }
 fleet-analyzer = { path = "crates/fleet-analyzer" }
 fleet-hooks = { path = "crates/fleet-hooks" }
 fleet-providers = { path = "crates/fleet-providers" }
+fleet-engine = { path = "crates/fleet-engine" }
 fleet-mcp = { path = "crates/fleet-mcp" }
 fleet-tui = { path = "crates/fleet-tui" }
 fleet-web = { path = "crates/fleet-web" }

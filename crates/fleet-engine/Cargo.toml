@@ -1,0 +1,35 @@
+[package]
+name = "fleet-engine"
+description = "Real multi-AI execution engine: persistent task queue, provider adapters, quota failover with git checkpoint handoff, independent review, and test-gated integration."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+sha2.workspace = true
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "time", "sync", "signal", "fs"] }
+tokio-util = "0.7"
+rusqlite = { version = "0.32", features = ["bundled"] }
+regex = "1"
+globset = "0.4"
+thiserror = "1"
+clap = { version = "4", features = ["derive"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security", "Win32_System_JobObjects", "Win32_System_Threading"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
+
+# Deterministic stand-in for an AI CLI, used by the end-to-end tests.
+[[bin]]
+name = "fake-ai"
+path = "src/bin/fake_ai.rs"
+test = false
+doc = false

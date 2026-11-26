@@ -24,6 +24,7 @@ fleet-plugins.workspace = true
 fleet-analyzer.workspace = true
 fleet-hooks.workspace = true
 fleet-providers.workspace = true
+fleet-engine.workspace = true
 fleet-mcp.workspace = true
 fleet-tui.workspace = true
 fleet-web.workspace = true

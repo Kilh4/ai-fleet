@@ -1,88 +1,76 @@
-# 🚀 AI-Fleet v3.0 (`12-Crate Rust Enterprise Monorepo`)
+# 🚀 AI-Fleet v6.0 — Native Rust Multi-AI Execution Engine & Swarm Platform
 
-**Enterprise Multi-AI Swarm Orchestration Platform in Native Rust** — Orchestrate **Claude Code (`Opus 5.5` / `Sonnet 4.5`)**, **OpenAI Codex (`gpt-6.2-astra` / `soul`)**, **Google Antigravity (`Argon` / `Gemini 4 Neon`)**, and any custom AI CLI simultaneously across isolated `FencedLease` Git worktrees.
-
-Built as a **12-Crate Cargo Workspace** that ports and supersedes **Ruflo V3**:
-- **64 Specialized Agent Personas** across 8 enterprise domains (`fleet-agents`)
-- **64-Dim HNSW Semantic Vector Memory Graph** with sub-millisecond hybrid cosine + lexical retrieval (`fleet-memory`)
-- **2-Layer 8-Expert Neural Mixture-of-Experts (MoE)** + **SONA / EWC Fisher Information Consolidation** + **Information-Bottleneck Token Compressor** (`fleet-neural`)
-- **Queen Hive-Mind Task Decomposer** + **3 Consensus Engines (`PBFT Byzantine`, `Raft`, `Gossip`)** + **ADR-330 Pheromone Trails** + **Real Git Worktree Coordinator** (`fleet-swarm`)
-- **CASA Deterministic Authority Gate (`ADR-380 §3`)** + **AIDefence Prompt-Injection & Secret Shield (`ADR-118`)** + **ContinueGate** + **Cryptographic Truth Anchors** (`fleet-security`)
-- **SPARC 5-Phase Methodology Pipeline**, **Pair Programming Driver/Navigator**, and **12 Autonomous Daemon Workers** (`fleet-workflows`)
-- **Cross-Team Federation Hub** with **Automatic PII/Secret Redaction** and **Gumbel-Softmax Statistical Cryptographic Watermarking** (`fleet-federation`)
-- **Standards-Compliant Model Context Protocol (`MCP JSON-RPC 2.0 over stdio`) Server** (`fleet-mcp`)
-- **8-View Multi-Page ANSI/Unicode Terminal UI (`BBS` & `Orbital` modes)** (`fleet-tui`)
+**Production-Grade Multi-AI Orchestration Platform in Native Rust (`19 Crates + 120 Embedded Elite GitHub Skills`)** — Run **Claude Code (`Opus` / `Sonnet`)**, **OpenAI Codex (`Astra` / `Soul`)**, **Google Antigravity (`Argon` / `Neon`)**, and any custom AI CLI concurrently on personal subscriptions (`$0.00` API billing protection), backed by **SQLite WAL persistence**, **lossless Git worktree checkpoint handoff**, **Windows Job Object process-tree containment**, **Queen Topological Wave DAG planning**, **Hybrid FTS5 + 128-D Vector Reflexion Memory**, **CodeGraph PageRank/SCC intelligence**, **Deterministic Security/Money/RLS static gates**, and **Multi-Provider Quorum Review**.
 
 ---
 
-## 🏗 12-Crate Workspace Architecture
+## 🔥 Core Capabilities (`crates/fleet-engine`)
 
-```text
-ai-fleet/
-├── Cargo.toml                      # Workspace root (resolver = "2", 12 members)
-├── crates/
-│   ├── fleet-core/                 # Domain entities, SHA-256 hash-chained decision ledger, workspace discovery
-│   ├── fleet-agents/               # 64 specialized agent personas across 8 domains + capability matcher
-│   ├── fleet-memory/               # 64-dim HNSW semantic vector graph, n-gram embeddings & hybrid search
-│   ├── fleet-neural/               # 2-Layer 8-Expert MoE, SONA/EWC Fisher consolidation & token compressor
-│   ├── fleet-security/             # CASA (ADR-380), AIDefence (ADR-118), ContinueGate & TruthAnchors
-│   ├── fleet-swarm/                # Queen task decomposer, PBFT/Raft/Gossip consensus, Pheromones & Git worktrees
-│   ├── fleet-workflows/            # SPARC 5-phase methodology, Pair programming & 12 daemon workers
-│   ├── fleet-federation/           # Cross-team PII redactor & Gumbel-Softmax statistical watermark verifier
-│   ├── fleet-providers/            # Multi-AI CLI runner, subscription-only sanitizer & quota circuit-breaker
-│   ├── fleet-mcp/                  # Native JSON-RPC 2.0 MCP server (10 tools over stdio & CLI exec)
-│   └── fleet-tui/                  # 8-view terminal UI console (overview, agents, workflows, mcp, orbital)
-└── bins/
-    └── ai-fleet/                   # Unified CLI binary + workspace integration test suite
-```
+1. **Real Multi-AI Async Execution & Zero-Loss Quota Failover (`engine.rs`, `providers.rs`, `proc.rs`, `git.rs`)**
+   - Streams `claude -p --output-format stream-json`, `codex exec --json`, and custom CLIs concurrently under `tokio`.
+   - Strips metered `*_API_KEY` environment variables automatically so tools strictly use personal subscriptions.
+   - Detects subscription quota limits & parses exact reset timestamps (`try again in 2h 5m`, `Retry-After`, clock resets, epoch tags).
+   - Commits partial work onto isolated per-task Git worktrees (`ai-fleet/<task-id>`) and seamlessly hands off to the next healthy AI provider without losing a single byte.
+   - Contains every child/grandchild process inside **Windows Job Objects (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`)** / Unix process groups, enforcing wall-clock and idle-stall timeouts.
+   - Uses monotonic **SQLite Lease Fencing (`lease_epoch`)** so crashed or zombie workers can never overwrite newer task state.
+
+2. **120 Hand-Verified Elite GitHub Agent Skills (`skills/elite/` + `skills.rs`)**
+   - Compiled directly into `ai-fleet.exe` (`build.rs`) from the highest-starred `MIT` / `Apache-2.0` repositories on GitHub (`obra/superpowers` ★327K, `affaan-m/ECC` ★311K, `DietrichGebert/ponytail` ★199K, `msitarzewski/agency-agents` ★170K, `nextlevelbuilder/ui-ux-pro-max-skill` ★154K, `Graphify-Labs/graphify` ★153K, `Leonxlnx/taste-skill` ★121K, `addyosmani/agent-skills` ★120K, `pbakaus/impeccable` ★117K, `coreyhaines31/marketingskills` ★62K, `emilkowalski/skills` ★59K, `K-Dense-AI/claude-scientific-skills` ★58K, `wshobson/agents` ★42K).
+   - Balanced across **12 specialized domains** (`10` skills each = **120 skills**):
+     - `software-engineering`, `architecture`, `thinking-wisdom`, `principal-experience`, `design-ui-ux`, `languages`, `accounting-erp`, `auditing-security`, `mathematics`, `physics-simulation`, `economics-quant`, `product-features`.
+   - Matched automatically per task via **Okapi BM25 + Bilingual Arabic/English Query Expansion + File-Extension Affinity + Role Boosting**, and injected cleanly into both Author and Reviewer prompts.
+   - Full catalog: [`skills/elite/README.md`](skills/elite/README.md).
+
+3. **Autonomous Queen Wave-DAG Planner (`queen.rs`)**
+   - Scans repository layout and `CodeGraph` hubs, decomposes complex epics into **cycle-free, file-scope-disjoint topological waves** (verified via Kahn's algorithm), automatically serializes overlapping `owned_files` scopes to prevent merge conflicts, and executes waves in parallel.
+
+4. **Persistent Hybrid Memory & Automatic Reflexion Bank (`memory.rs`)**
+   - Combines **SQLite FTS5 BM25** + **128-D Signed Feature-Hashed Cosine Vectors** + **Navigable Small-World (`NSW`) associative graph** fused via **Reciprocal Rank Fusion (`RRF`)**.
+   - Automatically synthesizes and stores **`Reflexion` lessons** whenever a failed attempt (`verify_failed`, `static_audit_failed`, `scope_violation`, `review_rejected`) is overcome, injecting those lessons into future tasks so mistakes never repeat.
+
+5. **Multi-Language CodeGraph (`PageRank` + `Tarjan SCC`) & Pre-Merge Static Gate (`intelligence.rs`)**
+   - Extracts symbols and cross-file dependencies across **Rust, TypeScript/JS, C#, Python, Go, and SQL**, computing **iterative PageRank centrality**, **circular dependency SCCs**, and **transitive reverse-dependency blast radius**.
+   - **Pre-Merge Deterministic Static Gate**: Automatically blocks commits introducing hardcoded secrets, SQL-injection string interpolation, **IEEE-754 binary floats (`f64`/`float`/`DOUBLE PRECISION`) on monetary fields/columns**, or multi-tenant SQL tables missing `ENABLE ROW LEVEL SECURITY`.
+
+6. **Independent & Quorum Multi-Provider Code Review + Adaptive UCB1 Routing (`router.rs`)**
+   - Enforces non-author review (`Claude` cannot approve its own diff; `Codex` or `Antigravity` reviews it) and supports **Multi-Provider Quorum Review (`--quorum 2`)** requiring multiple distinct AI providers to approve critical changes.
+   - Escalates model tier and reasoning effort (`low -> medium -> high -> xhigh -> max`) on work failures while learning provider/model win-rates via **UCB1**.
+
+7. **Standards-Compliant 15-Tool MCP Server & Live SQLite Web Console (`mcp.rs`, `web.rs`)**
+   - `ai-fleet engine mcp`: JSON-RPC 2.0 MCP server (`stdio`, both newline and `Content-Length` framing) exposing 15 live tools (`fleet_task_submit`, `fleet_queen_decompose`, `fleet_skills_match`, `fleet_memory_search`, `fleet_code_graph`, `fleet_blast_radius`, `fleet_static_audit`, etc.).
+   - `ai-fleet engine console`: Live browser Mission Control dashboard connected directly to `engine.db`.
 
 ---
 
-## ⚡ Quick Start & Commands
+## ⚡ Quick Start
 
 ```bash
-# Build & run all workspace tests
+# Run the full workspace unit & end-to-end test suite
 cargo test --workspace
-cargo build --release
+cargo build --release --bin ai-fleet
 
-# 1. Multi-View Visual Console
-ai-fleet status
-ai-fleet status --look orbital
-ai-fleet status --view agents
-ai-fleet status --view workflows
-ai-fleet status --view mcp
+# 1. Execute a task end-to-end (auto-matches Elite Skills, runs in isolated worktree, static-audits, verifies & merges)
+ai-fleet engine do "Implement double-entry journal posting with exact minor-unit balances" \
+  --owned "src/ledger/**" --verify "cargo test" --quorum 1
 
-# 2. Parallel Swarm Execution & Live Failover Drill
-ai-fleet start
-ai-fleet drill
-ai-fleet stop
+# 2. Decompose a multi-layer Epic with Queen into parallel DAG waves & execute
+ai-fleet engine queen "Build multi-tenant invoicing API, PostgreSQL RLS migration, and dashboard UI" --execute
 
-# 3. Connect Any AI & Switch Models / Reasoning Effort (low -> medium -> high -> xhigh -> max)
-ai-fleet provider add ollama ollama.exe qwen3-coder:30b high run {model} "{prompt}"
-ai-fleet provider switch codex soul xhigh
-ai-fleet provider switch antigravity argon xhigh
-ai-fleet provider quota claude 0 45 ready
+# 3. Browse & match the 120 Bundled Elite GitHub Skills (supports English & Arabic!)
+ai-fleet skills list
+ai-fleet skills list --domain accounting-erp
+ai-fleet skills match "بناء نظام محاسبة قيد مزدوج وتدقيق RLS"
+ai-fleet skills show party-ledger-reconciliation
 
-# 4. 64 Agent Personas, Queen Decomposition & SPARC Methodology
-ai-fleet agents "PostgreSQL RLS policy audit"
-ai-fleet queen security-rls-audit
-ai-fleet sparc arch-verify
+# 4. Inspect CodeGraph PageRank hubs, Blast Radius & Pre-Merge Static Gate
+ai-fleet graph --blast crates/fleet-engine/src/store.rs
+ai-fleet audit
 
-# 5. Neural MoE + SONA/EWC, HNSW Vector Memory & Context Compression
-ai-fleet moe "Audit SQL migration money scale and RLS security policies"
-ai-fleet memory store estr-core zatca.secp256k1 "ZATCA Phase-2 uses ECDSA secp256k1 and PIH chaining"
-ai-fleet memory search "secp256k1 invoice signature"
-ai-fleet compress 12 "Long inter-agent handoff message with sha256=ae90aaab and commit 530fc5e..."
+# 5. Query Persistent Hybrid FTS5 + 128-D Vector + Reflexion Memory
+ai-fleet engine memory remember "Money Scale Invariant" "Always use NUMERIC(19,4) or i64 minor units; never float64"
+ai-fleet engine memory search "invoice tax currency rounding"
 
-# 6. PBFT / Raft / Gossip Consensus, AIDefence, CASA & Federation Watermarking
-ai-fleet consensus PBFT "Approve Phase 0 Gate"
-ai-fleet consensus Raft "Replicate swarm state"
-ai-fleet defense " task prompt "
-ai-fleet casa worktree.write
-ai-fleet federate team-alpha "Payload with email apppbf@gmail.com and token=sk-ant-123"
-ai-fleet policy verify
-
-# 7. Native MCP Server (for Claude Code, Codex, Cursor, Antigravity)
-ai-fleet mcp start
-ai-fleet mcp exec fleet_swarm_status "{}"
+# 6. Launch Live SQLite Web Console or Real MCP Server
+ai-fleet engine console --bind 127.0.0.1:7878
+ai-fleet engine mcp
 ```
