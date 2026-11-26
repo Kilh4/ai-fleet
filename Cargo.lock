@@ -35,6 +35,7 @@ dependencies = [
  "fleet-engine",
  "fleet-federation",
  "fleet-hooks",
+ "fleet-kernel",
  "fleet-mcp",
  "fleet-memory",
  "fleet-neural",
@@ -49,6 +50,8 @@ dependencies = [
  "ruflo-watermark",
  "serde",
  "serde_json",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]
@@ -413,6 +416,9 @@ version = "4.0.0"
 dependencies = [
  "chrono",
  "clap",
+ "fleet-kernel",
+ "fleet-plugins",
+ "fleet-security",
  "globset",
  "libc",
  "regex",
@@ -434,6 +440,7 @@ dependencies = [
  "chrono",
  "fleet-core",
  "serde",
+ "sha2",
 ]
 
 [[package]]
@@ -444,6 +451,18 @@ dependencies = [
  "fleet-security",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "fleet-kernel"
+version = "4.0.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -488,7 +507,9 @@ dependencies = [
 name = "fleet-plugins"
 version = "4.0.0"
 dependencies = [
+ "fleet-kernel",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -513,7 +534,9 @@ version = "4.0.0"
 dependencies = [
  "chrono",
  "fleet-core",
+ "fleet-kernel",
  "serde",
+ "sha2",
 ]
 
 [[package]]
@@ -523,9 +546,9 @@ dependencies = [
  "chrono",
  "fleet-agents",
  "fleet-core",
+ "fleet-kernel",
  "fleet-neural",
  "serde",
- "serde_json",
 ]
 
 [[package]]

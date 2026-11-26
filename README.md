@@ -1,6 +1,8 @@
-# 🚀 AI-Fleet v6.0 — Native Rust Multi-AI Execution Engine & Swarm Platform
+# 🚀 AI-Fleet v7.0 — Hexagonal Microkernel Multi-AI Swarm Platform
 
-**Production-Grade Multi-AI Orchestration Platform in Native Rust (`19 Crates + 120 Embedded Elite GitHub Skills`)** — Run **Claude Code (`Opus` / `Sonnet`)**, **OpenAI Codex (`Astra` / `Soul`)**, **Google Antigravity (`Argon` / `Neon`)**, and any custom AI CLI concurrently on personal subscriptions (`$0.00` API billing protection), backed by **SQLite WAL persistence**, **lossless Git worktree checkpoint handoff**, **Windows Job Object process-tree containment**, **Queen Topological Wave DAG planning**, **Hybrid FTS5 + 128-D Vector Reflexion Memory**, **CodeGraph PageRank/SCC intelligence**, **Deterministic Security/Money/RLS static gates**, and **Multi-Provider Quorum Review**.
+**Production-Grade Multi-AI Orchestration Platform in Native Rust (`20 Crates + Hexagonal Ports & Adapters + 120 Embedded Elite GitHub Skills`)** — Run **Claude Code (`Opus` / `Sonnet`)**, **OpenAI Codex (`Astra` / `Soul`)**, **Google Antigravity (`Argon` / `Neon`)**, and any custom AI CLI concurrently on personal subscriptions (`$0.00` API billing protection), governed by a **pure `fleet-kernel` Microkernel (`Port` traits, `DomainEventBus`, `CircuitBreaker`, `Bulkhead`, `WorkStealingBroker`, `PluginInterceptor` pipeline)**, **3-Layer DDD Bounded Contexts (`domain / application / infrastructure`)**, **SQLite WAL persistence**, **Queen Topological Wave-DAG planning**, **Hybrid FTS5 + 128-D Vector Reflexion Memory**, **Sherman-Morrison LinUCB Contextual Bandit**, **$3f+1$ PBFT / Raft / Vector-Clock CRDT Consensus**, and **Automated Architecture Fitness Tests**.
+
+> 📐 **Full C4 & Hexagonal Architecture Blueprint:** [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md)
 
 ---
 

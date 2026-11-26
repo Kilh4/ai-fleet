@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/fleet-kernel",
     "crates/fleet-core",
     "crates/fleet-agents",
     "crates/fleet-memory",
@@ -36,6 +37,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 sha2 = "0.10"
+fleet-kernel = { path = "crates/fleet-kernel" }
 fleet-core = { path = "crates/fleet-core" }
 fleet-agents = { path = "crates/fleet-agents" }
 fleet-memory = { path = "crates/fleet-memory" }

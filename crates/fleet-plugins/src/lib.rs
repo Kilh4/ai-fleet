@@ -1,17 +1,13 @@
-//! `fleet-plugins` — Full catalog of all 48 specialized plugins from Ruflo V3,
-//! ported natively to Rust with capability discovery and workspace activation.
+//! `fleet-plugins` — Hexagonal 3-Layer Microkernel Plugin SDK (`domain`,
+//! `application`, `infrastructure`) + 48-Plugin Enterprise Catalog.
 
-use serde::{Deserialize, Serialize};
+pub mod application;
+pub mod domain;
+pub mod infrastructure;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FleetPlugin {
-    pub id: String,
-    pub category: String,
-    pub version: String,
-    pub enabled_by_default: bool,
-    pub tools_count: usize,
-    pub description: String,
-}
+pub use application::{PipelineExecutionResult, PipelineStepTrace, PluginHost};
+pub use domain::{FleetPlugin, PluginCapability, PluginManifest, PluginTrustTier};
+pub use infrastructure::{default_plugin_host, DeclarativeRulePlugin, SqlAndFinancialPrecisionPlugin, ZeroPaidBillingAndGitGuardPlugin};
 
 pub fn catalog_48_plugins() -> Vec<FleetPlugin> {
     let raw: &[(&str, &str, bool, usize, &str)] = &[
@@ -69,7 +65,7 @@ pub fn catalog_48_plugins() -> Vec<FleetPlugin> {
         .map(|(id, cat, en, tools, desc)| FleetPlugin {
             id: (*id).to_string(),
             category: (*cat).to_string(),
-            version: "4.0.0".to_string(),
+            version: "7.0.0".to_string(),
             enabled_by_default: *en,
             tools_count: *tools,
             description: (*desc).to_string(),
@@ -91,4 +87,55 @@ pub fn discover_plugins_for_task(query: &str) -> Vec<FleetPlugin> {
         matched = catalog_48_plugins().into_iter().filter(|p| p.enabled_by_default).take(6).collect();
     }
     matched
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fleet_kernel::{HookPhase, InterceptContext, InterceptOutcome, PluginInterceptor};
+    use std::collections::{BTreeMap, BTreeSet};
+    use std::sync::Arc;
+
+    struct RoguePlugin;
+    impl PluginInterceptor for RoguePlugin {
+        fn plugin_id(&self) -> &str { "rogue" }
+        fn phases(&self) -> &[HookPhase] { &[HookPhase::BeforeExecute] }
+        fn intercept(&self, _: &InterceptContext) -> InterceptOutcome {
+            InterceptOutcome::Reject { reason: "unauthorized block attempt".into() }
+        }
+    }
+
+    #[test]
+    fn capability_sandbox_strips_unauthorized_plugin_rejection() {
+        let mut host = default_plugin_host(None);
+        // Register rogue plugin WITHOUT `BlockExecution` capability!
+        host.register(
+            PluginManifest {
+                id: "rogue".into(),
+                version: "0.1.0".into(),
+                category: "untrusted".into(),
+                trust_tier: PluginTrustTier::SandboxedCommunity,
+                granted_capabilities: BTreeSet::from([PluginCapability::InspectContext]),
+                priority: 1,
+                enabled: true,
+                description: "Untrusted".into(),
+            },
+            Arc::new(RoguePlugin),
+        );
+
+        let ctx = InterceptContext {
+            task_id: "t1".into(),
+            phase: HookPhase::BeforeExecute,
+            role: "author".into(),
+            provider: "claude".into(),
+            model: "opus".into(),
+            prompt: "Create invoice ledger migration".into(),
+            changed_files: vec!["001_invoices.sql".into()],
+            attributes: BTreeMap::new(),
+        };
+        let res = host.run_phase(&ctx);
+        assert!(res.blocked_by.is_none(), "rogue plugin lacked BlockExecution so it must be downgraded");
+        assert!(res.traces.iter().any(|t| t.plugin_id == "rogue" && t.capability_downgraded));
+        assert!(!res.enriched_guidance.is_empty(), "SQL precision plugin must enrich invoice task");
+    }
 }

@@ -1,0 +1,14 @@
+[package]
+name = "fleet-kernel"
+description = "Hexagonal Architecture Kernel for AI-Fleet: Port traits, typed Domain EventBus, CircuitBreaker/Bulkhead resilience, Work-Stealing Claims broker, and Microkernel Plugin Interceptor pipeline."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+sha2.workspace = true
+tokio = { version = "1", features = ["sync", "time", "rt", "macros"] }
+thiserror = "1"

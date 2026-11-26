@@ -10,6 +10,7 @@
 //! * [`router`]: complexity/attempt-driven tier and effort escalation + UCB1 learning from history.
 //! * [`engine`]: the scheduler tying it together, with independent non-author review.
 
+pub mod adapters;
 pub mod cli;
 pub mod engine;
 pub mod error;

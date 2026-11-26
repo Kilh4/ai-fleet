@@ -7,4 +7,6 @@ license.workspace = true
 [dependencies]
 serde.workspace = true
 chrono.workspace = true
+sha2.workspace = true
 fleet-core.workspace = true
+fleet-kernel.workspace = true

@@ -15,6 +15,12 @@ use crate::router::{route, Candidate, Role, Route};
 use crate::skills::SkillRegistry;
 use crate::store::{now_ts, truncate, Store};
 use chrono::Utc;
+use fleet_kernel::{
+    Bulkhead, CircuitBreaker, CircuitBreakerConfig, DomainEventBus, DomainEventPayload, HookPhase,
+    InterceptContext, WorkStealingBroker,
+};
+use fleet_plugins::{default_plugin_host, PluginCapability, PluginHost, PluginManifest, PluginTrustTier};
+use fleet_security::AiDefenceKernelInterceptor;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashMap};
@@ -123,6 +129,11 @@ struct Inner {
     store: Store,
     memory: MemoryStore,
     skills: SkillRegistry,
+    kernel_bus: DomainEventBus,
+    plugin_host: PluginHost,
+    breakers: HashMap<String, CircuitBreaker>,
+    bulkheads: HashMap<String, Bulkhead>,
+    claims: WorkStealingBroker,
     binaries: HashMap<String, Option<PathBuf>>,
     cancel: CancellationToken,
     merge_lock: tokio::sync::Mutex<()>,
@@ -192,6 +203,44 @@ impl Engine {
         let store = Store::open(&cfg.state_dir.join("engine.db"))?;
         let memory = MemoryStore::open(&cfg.state_dir.join("memory.db"))?;
         let skills = SkillRegistry::load(Some(&cfg.repo));
+        let kernel_bus = DomainEventBus::new(2048);
+        let mut plugin_host = default_plugin_host(Some(&cfg.repo));
+        plugin_host.register(
+            PluginManifest {
+                id: "fleet-aidefence-shield".into(),
+                version: "7.0.0".into(),
+                category: "security".into(),
+                trust_tier: PluginTrustTier::KernelVerified,
+                granted_capabilities: [PluginCapability::InspectContext, PluginCapability::BlockExecution].into_iter().collect(),
+                priority: 0,
+                enabled: true,
+                description: "Real-time deobfuscating prompt-injection and secret shield".into(),
+            },
+            Arc::new(AiDefenceKernelInterceptor),
+        );
+        let breakers: HashMap<String, CircuitBreaker> = cfg
+            .providers
+            .iter()
+            .map(|p| {
+                (
+                    p.id.clone(),
+                    CircuitBreaker::new(
+                        p.id.clone(),
+                        CircuitBreakerConfig {
+                            failure_threshold: 4,
+                            half_open_success_threshold: 1,
+                            open_duration: Duration::from_secs(30),
+                        },
+                    ),
+                )
+            })
+            .collect();
+        let bulkheads: HashMap<String, Bulkhead> = cfg
+            .providers
+            .iter()
+            .map(|p| (p.id.clone(), Bulkhead::new(p.id.clone(), p.max_concurrency.max(1))))
+            .collect();
+        let claims = WorkStealingBroker::new(cfg.run_timeout);
         let binaries = cfg.providers.iter().map(|p| (p.id.clone(), resolve_binary(&p.binary))).collect();
         let (events, _) = broadcast::channel(1024);
         Ok(Engine {
@@ -200,12 +249,29 @@ impl Engine {
                 store,
                 memory,
                 skills,
+                kernel_bus,
+                plugin_host,
+                breakers,
+                bulkheads,
+                claims,
                 binaries,
                 cancel: CancellationToken::new(),
                 merge_lock: tokio::sync::Mutex::new(()),
                 events,
             }),
         })
+    }
+
+    pub fn kernel_bus(&self) -> &DomainEventBus {
+        &self.inner.kernel_bus
+    }
+
+    pub fn plugin_host(&self) -> &PluginHost {
+        &self.inner.plugin_host
+    }
+
+    pub fn claims_broker(&self) -> &WorkStealingBroker {
+        &self.inner.claims
     }
 
     pub fn config(&self) -> &EngineConfig {
@@ -590,10 +656,63 @@ impl Inner {
         }
     }
 
-    /// Launch the provider's CLI and supervise it to completion.
-    async fn run_agent(&self, task: &Task, role: Role, route: &Route, wt: &Path, prompt: String, commit_before: &str) -> Result<AgentRun> {
+    /// Launch the provider's CLI and supervise it to completion, passing through
+    /// the Microkernel Plugin Pipeline, Bulkhead concurrency isolator, and CircuitBreaker.
+    async fn run_agent(&self, task: &Task, role: Role, route: &Route, wt: &Path, mut prompt: String, commit_before: &str) -> Result<AgentRun> {
         let spec = self.spec(&route.provider)?.clone();
         let attempt = task.attempts + task.handoffs + 1;
+
+        // 1. Microkernel Plugin Interceptor Pipeline (`BeforeExecute`)
+        let mut attrs = BTreeMap::new();
+        attrs.insert("user_prompt".into(), task.prompt.clone());
+        let pipe = self.plugin_host.run_phase(&InterceptContext {
+            task_id: task.id.clone(),
+            phase: HookPhase::BeforeExecute,
+            role: role.as_str().into(),
+            provider: route.provider.clone(),
+            model: route.model.clone(),
+            prompt: prompt.clone(),
+            changed_files: task.owned_files.clone(),
+            attributes: attrs,
+        });
+        if let Some((plugin_id, reason)) = pipe.blocked_by {
+            self.kernel_bus.publish(
+                &task.id,
+                Some(task.id.clone()),
+                DomainEventPayload::PluginIntercepted {
+                    plugin_id: plugin_id.clone(),
+                    phase: "before_execute".into(),
+                    verdict: "reject".into(),
+                },
+            );
+            self.emit(Some(&task.id), "plugin.blocked", &format!("blocked by `{plugin_id}`: {reason}"));
+            let run_id = self.store.insert_run(
+                &task.id,
+                attempt,
+                role.as_str(),
+                &route.provider,
+                &route.model,
+                route.effort.as_str(),
+                &route.reason,
+                "",
+                commit_before,
+            )?;
+            return Ok(AgentRun {
+                run_id,
+                outcome: RunOutcome::failure(FailureKind::StaticAuditFailed, reason),
+                parsed: ParsedOutput::default(),
+                exit_code: None,
+                duration_ms: 0,
+            });
+        }
+        if !pipe.enriched_guidance.is_empty() {
+            prompt.push_str("\n## Active Microkernel Plugin Directives\n");
+            for (_, g) in &pipe.enriched_guidance {
+                prompt.push_str(g);
+                prompt.push('\n');
+            }
+        }
+
         let safe_model: String = route.model.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '.' { c } else { '_' }).collect();
         let log_path = self
             .cfg
@@ -612,11 +731,26 @@ impl Inner {
             &log_path.to_string_lossy(),
             commit_before,
         )?;
+        self.kernel_bus.publish(
+            &task.id,
+            Some(task.id.clone()),
+            DomainEventPayload::RunDispatched {
+                provider: route.provider.clone(),
+                model: route.model.clone(),
+                effort: route.effort.as_str().into(),
+                role: role.as_str().into(),
+            },
+        );
         self.emit(
             Some(&task.id),
             "run.started",
             &format!("{} via {}/{} effort={} (attempt {attempt})", role.as_str(), route.provider, route.model, route.effort),
         );
+
+        let _bulkhead_permit = match self.bulkheads.get(&spec.id) {
+            Some(bh) => bh.acquire_timeout(self.cfg.run_timeout).await.ok(),
+            None => None,
+        };
 
         let started = Instant::now();
         let binary = self.binaries.get(&spec.id).cloned().flatten();
@@ -637,7 +771,7 @@ impl Inner {
                 }
                 std::fs::write(
                     &log_path,
-                    format!("# {} {}\n# prompt ({} bytes) follows\n{}\n# ---- output ----\n", inv.program.display(), inv.args.join(" "), prompt.len(), prompt),
+                    format!("# {} {}\n# prompt ({} bytes) follows\n{}\n# ---- output ----\n", inv.program.display(), inv.args.join(" "), prompt.len(), inv.stdin.as_deref().unwrap_or(&prompt)),
                 )?;
                 let mut parser = StreamParser::new(spec.output);
                 let ps = ProcSpec {
@@ -685,6 +819,22 @@ impl Inner {
                 }
             }
         };
+
+        if let Some(cb) = self.breakers.get(&spec.id) {
+            let transition = if outcome.is_success() { cb.record_success() } else { cb.record_failure() };
+            if let Some((from_s, to_s)) = transition {
+                self.kernel_bus.publish(
+                    &task.id,
+                    Some(task.id.clone()),
+                    DomainEventPayload::CircuitStateChanged {
+                        resource: spec.id.clone(),
+                        from_state: from_s.as_str().into(),
+                        to_state: to_s.as_str().into(),
+                    },
+                );
+            }
+        }
+
         Ok(AgentRun { run_id, outcome, parsed, exit_code, duration_ms: started.elapsed().as_millis() as u64 })
     }
 

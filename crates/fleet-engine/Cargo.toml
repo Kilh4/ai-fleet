@@ -10,6 +10,9 @@ serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
 sha2.workspace = true
+fleet-kernel.workspace = true
+fleet-plugins.workspace = true
+fleet-security.workspace = true
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "time", "sync", "signal", "fs"] }
 tokio-util = "0.7"
 rusqlite = { version = "0.32", features = ["bundled"] }
