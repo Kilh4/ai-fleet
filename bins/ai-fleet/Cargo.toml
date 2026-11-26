@@ -26,3 +26,5 @@ fleet-hooks.workspace = true
 fleet-providers.workspace = true
 fleet-mcp.workspace = true
 fleet-tui.workspace = true
+ruflo-agntcy.workspace = true
+ruflo-watermark.workspace = true

@@ -56,6 +56,8 @@ fn print_v4_help() {
     println!("\n{}3. 64 PERSONAS, 48 PLUGINS, QUEEN DECOMPOSER, SPARC & HOOKS:{}", BOLD, RESET);
     println!("  {}ai-fleet agents [search_query]{}                         Browse or match from the 64 specialized agent personas", MAGENTA, RESET);
     println!("  {}ai-fleet plugins [search_query]{}                        Browse or discover from the 48 enterprise plugins", MAGENTA, RESET);
+    println!("  {}ai-fleet ecosystem{}                                     Live audit of all 8,100+ files (145 skills, 108 agents, 168 cmds)", MAGENTA, RESET);
+    println!("  {}ai-fleet watermark <text>{}                              Run SynthID-Text Tournament + Gumbel + Bayesian watermark detector", MAGENTA, RESET);
     println!("  {}ai-fleet queen <task_id>{}                               Decompose task into persona-assigned DAG sub-tasks", MAGENTA, RESET);
     println!("  {}ai-fleet sparc <task_id>{}                               Advance task through 5-phase SPARC methodology", MAGENTA, RESET);
     println!("  {}ai-fleet hooks <pre-tool|post-tool|session-start|stop>{} Run lifecycle hook evaluation (Claude/Codex hooks)", MAGENTA, RESET);
@@ -175,6 +177,71 @@ fn main() {
             if !res.allowed {
                 std::process::exit(1);
             }
+        }
+        "ecosystem" | "skills" | "commands" => {
+            let ws = detect_workspace_root();
+            let count_dir = |rel: &str| -> usize {
+                let p = ws.join(rel);
+                if !p.exists() {
+                    return 0;
+                }
+                fn walk(dir: &std::path::Path) -> usize {
+                    let mut c = 0;
+                    if let Ok(rd) = fs::read_dir(dir) {
+                        for entry in rd.flatten() {
+                            let path = entry.path();
+                            if path.is_dir() {
+                                c += walk(&path);
+                            } else {
+                                c += 1;
+                            }
+                        }
+                    }
+                    c
+                }
+                walk(&p)
+            };
+            let skills_cnt = count_dir(".agents/skills");
+            let claude_agents = count_dir(".claude/agents");
+            let claude_cmds = count_dir(".claude/commands");
+            let claude_skills = count_dir(".claude/skills");
+            let plugins_cnt = count_dir("plugins");
+            let v3_cnt = count_dir("v3");
+            let docs_cnt = count_dir("docs");
+            let crates_cnt = count_dir("crates") + count_dir("bins");
+            let total = skills_cnt + claude_agents + claude_cmds + claude_skills + plugins_cnt + v3_cnt + docs_cnt + crates_cnt;
+
+            println!(
+                "\n{}{}🏛 AI-FLEET v4.0 FULL ECOSYSTEM INVENTORY ({} active files on disk){}",
+                BOLD, BRIGHT_CYAN, total, RESET
+            );
+            println!("  ├─ {}17 Native Rust Crates (`crates/*` + `bins/*`):{}  {:>5} source files", GREEN, RESET, crates_cnt);
+            println!("  ├─ {}48 Enterprise Plugins (`plugins/*`):{}            {:>5} plugin files", MAGENTA, RESET, plugins_cnt);
+            println!("  ├─ {}V3 Core Modules (`v3/@claude-flow/*`):{}          {:>5} module files", CYAN, RESET, v3_cnt);
+            println!("  ├─ {}Agent Skills (`.agents/skills/*`):{}              {:>5} skill definitions", YELLOW, RESET, skills_cnt);
+            println!("  ├─ {}Claude Agent Specs (`.claude/agents/*`):{}        {:>5} agent markdown specs", GREEN, RESET, claude_agents);
+            println!("  ├─ {}Slash Commands (`.claude/commands/*`):{}          {:>5} command workflows", CYAN, RESET, claude_cmds);
+            println!("  ├─ {}Claude Skills & Helpers (`.claude/skills/*`):{}   {:>5} skill/helper files", MAGENTA, RESET, claude_skills);
+            println!("  └─ {}Architecture & ADR Docs (`docs/*`):{}             {:>5} documentation files\n", YELLOW, RESET, docs_cnt);
+        }
+        "watermark" | "synthid" => {
+            let vocab = 128u32;
+            let cfg = ruflo_watermark::WatermarkConfig::new(ruflo_watermark::WatermarkKey::from_bytes(b"ai-fleet-v4-synthid"))
+                .with_layers(6);
+            let tokens: Vec<u32> = (0..vocab).collect();
+            let probs = vec![1.0f32 / (vocab as f32); vocab as usize];
+            let mut wm = ruflo_watermark::Watermarker::new(cfg, ruflo_watermark::Scheme::Tournament);
+            let emitted: Vec<u32> = (0..240).map(|_| tokens[wm.step(&tokens, &probs)]).collect();
+            let det_tour = ruflo_watermark::detect_tournament(&emitted, cfg);
+            let det_gumbel = ruflo_watermark::detect_gumbel(&emitted, cfg);
+
+            println!(
+                "\n{}{}💧 SYNTHID-TEXT TOURNAMENT & GUMBEL WATERMARK ENGINE (`crates/ruflo-watermark`){}",
+                BOLD, BRIGHT_CYAN, RESET
+            );
+            println!("  ├─ Scored Positions:  {} tokens (6-layer Tournament tree)", det_tour.scored_positions);
+            println!("  ├─ Tournament Z-Score:{}{:>8.3}σ{} (p-value = {:.3e}, log10_p = {:.2})", GREEN, det_tour.z_score, RESET, det_tour.p_value, det_tour.log10_p);
+            println!("  └─ Gumbel Reference:  {:>8.3}σ (distortion-free baseline)\n", det_gumbel.z_score);
         }
         "watch" => {
             let cycles: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(3);

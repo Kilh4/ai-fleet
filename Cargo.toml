@@ -15,7 +15,13 @@ members = [
     "crates/fleet-providers",
     "crates/fleet-mcp",
     "crates/fleet-tui",
+    "crates/ruflo-agntcy",
+    "crates/ruflo-watermark",
     "bins/ai-fleet",
+]
+exclude = [
+    "v3",
+    "plugins",
 ]
 
 [workspace.package]
@@ -42,3 +48,5 @@ fleet-hooks = { path = "crates/fleet-hooks" }
 fleet-providers = { path = "crates/fleet-providers" }
 fleet-mcp = { path = "crates/fleet-mcp" }
 fleet-tui = { path = "crates/fleet-tui" }
+ruflo-agntcy = { path = "crates/ruflo-agntcy" }
+ruflo-watermark = { path = "crates/ruflo-watermark" }
