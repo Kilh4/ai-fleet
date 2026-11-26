@@ -1,5 +1,10 @@
-//! `fleet-providers` — Master Workspace State aggregator, Multi-AI CLI Runner,
-//! Subscription-Only Environment Sanitizer, and Quota Circuit-Breaker.
+//! `fleet-providers` — Multi-Module Enterprise Execution Crate:
+//! - `job_object`: Native Windows Job Object FFI (`kernel32.dll`) for process-tree containment.
+//! - `handoff`: SHA-256 worktree checkpointing, owned-file boundary enforcement, and receiver handoff.
+//! - `lib`: Master Workspace State aggregator, Multi-AI CLI Runner, and Quota Circuit-Breaker.
+
+pub mod handoff;
+pub mod job_object;
 
 use chrono::{DateTime, Duration, Utc};
 use fleet_core::{
@@ -11,13 +16,14 @@ use fleet_neural::{default_moe_experts, default_reasoning_bank, update_sona_ewc_
 use fleet_security::{default_truth_anchors, CasaEnvelope, ContinueGateMetrics};
 use fleet_swarm::{queen_decompose_task, ConsensusRound};
 use fleet_workflows::{built_in_12_daemon_workers, create_pair_session, DaemonWorkerSpec, PairProgrammingSession};
+use handoff::WorktreeCheckpoint;
+use job_object::spawn_in_windows_job_object;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceFleetState {
@@ -37,6 +43,8 @@ pub struct WorkspaceFleetState {
     pub tasks: BTreeMap<String, SwarmTask>,
     pub file_claims: BTreeMap<String, String>,
     pub fenced_leases: BTreeMap<String, FencedLease>,
+    #[serde(default)]
+    pub checkpoints: BTreeMap<String, WorktreeCheckpoint>,
     pub moe_experts: Vec<ExpertSlot>,
     pub reasoning_bank: Vec<ReasoningPattern>,
     pub vector_memory: Vec<VectorMemoryNode>,
@@ -54,7 +62,7 @@ pub fn state_file_path() -> PathBuf {
         return PathBuf::from(custom);
     }
     let root = detect_workspace_root();
-    root.join(".ai-fleet").join("state-v3.json")
+    root.join(".ai-fleet").join("state-v5.json")
 }
 
 pub fn save_fleet_state(state: &WorkspaceFleetState) {
@@ -180,13 +188,13 @@ pub fn load_or_init_fleet_state() -> WorkspaceFleetState {
     let mut ledger = Vec::new();
     append_ledger_row(
         &mut ledger,
-        "system:v3.0",
+        "system:v5.0",
         "workspace.init",
-        "Initialized 12-Crate AI-Fleet v3.0 (64 Agents, HNSW Memory, SONA/EWC MoE, PBFT/Raft/Gossip, MCP Server, SPARC)",
+        "Initialized 17-Crate AI-Fleet v5.0 (Windows Job Objects, Real Worktree Handoff, 314 MCP Tools, SynthID Watermark)",
     );
 
     let st = WorkspaceFleetState {
-        version: "3.0.0-rust".into(),
+        version: "5.0.0-rust".into(),
         topology: "hierarchical-mesh".into(),
         look_mode: "bbs".into(),
         active_view: "overview".into(),
@@ -202,6 +210,7 @@ pub fn load_or_init_fleet_state() -> WorkspaceFleetState {
         tasks,
         file_claims: claims,
         fenced_leases: BTreeMap::new(),
+        checkpoints: BTreeMap::new(),
         moe_experts: default_moe_experts(),
         reasoning_bank: default_reasoning_bank(),
         vector_memory: default_vector_memories(),
@@ -278,13 +287,14 @@ pub fn sanitize_subscription_env() -> Vec<(String, String)> {
         .collect()
 }
 
+/// Executes an AI CLI tool inside a Windows Job Object with strict process-tree containment.
 pub fn execute_ai_cli(
     provider: &AiProvider,
     model: &str,
     effort: &str,
     worktree: &Path,
     prompt: &str,
-) -> Result<String, (String, Option<String>, String)> {
+) -> Result<(String, u32), (String, Option<String>, String, u32)> {
     let mut cmd = Command::new(&provider.binary);
     cmd.current_dir(worktree);
     cmd.env_clear();
@@ -302,41 +312,28 @@ pub fn execute_ai_cli(
         cmd.arg(expanded);
     }
 
-    if provider.stdin_prompt {
-        cmd.stdin(Stdio::piped());
+    let stdin_data = if provider.stdin_prompt {
+        Some(prompt.as_bytes())
     } else {
-        cmd.stdin(Stdio::null());
-    }
-    cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+        None
+    };
 
-    let mut child = match cmd.spawn() {
-        Ok(c) => c,
+    let outcome = match spawn_in_windows_job_object(cmd, stdin_data) {
+        Ok(o) => o,
         Err(e) => {
             return Err((
                 "unavailable".into(),
                 None,
                 format!("Binary '{}' could not be launched: {}", provider.binary, e),
+                0,
             ))
         }
     };
 
-    if provider.stdin_prompt {
-        if let Some(mut stdin) = child.stdin.take() {
-            let _ = stdin.write_all(prompt.as_bytes());
-        }
-    }
-
-    let output = match child.wait_with_output() {
-        Ok(o) => o,
-        Err(e) => return Err(("error".into(), None, e.to_string())),
-    };
-
-    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-    if output.status.success() && !stdout.is_empty() {
-        Ok(stdout)
+    if outcome.exit_code == 0 && !outcome.stdout.is_empty() {
+        Ok((outcome.stdout, outcome.active_processes_remaining))
     } else {
-        let combined = format!("{}\n{}", stdout, stderr);
+        let combined = format!("{}\n{}", outcome.stdout, outcome.stderr);
         let low = combined.to_lowercase();
         let (kind, reset) = if low.contains("hit your limit") || low.contains("quota") || low.contains("resets") {
             ("quota".to_string(), Some((Utc::now() + Duration::hours(2)).to_rfc3339()))
@@ -345,6 +342,6 @@ pub fn execute_ai_cli(
         } else {
             ("error".to_string(), None)
         };
-        Err((kind, reset, combined))
+        Err((kind, reset, combined, outcome.active_processes_remaining))
     }
 }

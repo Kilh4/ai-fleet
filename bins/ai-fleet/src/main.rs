@@ -14,7 +14,9 @@ use fleet_memory::{insert_hnsw_node, search_hnsw_semantic};
 use fleet_neural::{compress_message_to_token_budget, route_moe_experts};
 use fleet_plugins::{catalog_48_plugins, discover_plugins_for_task};
 use fleet_providers::{
-    execute_ai_cli, load_or_init_fleet_state, record_outcome, refresh_provider_quotas, save_fleet_state,
+    execute_ai_cli,
+    handoff::{build_handoff_prompt, load_on_disk_persona_and_skill_context, seal_checkpoint, transfer_checkpoint_to_receiver},
+    load_or_init_fleet_state, record_outcome, refresh_provider_quotas, save_fleet_state,
 };
 use fleet_security::{check_casa_authorization, evaluate_continue_gate, scan_aidefence_threats};
 use fleet_swarm::{
@@ -273,13 +275,14 @@ fn main() {
             print_dashboard(&state, view_opt);
         }
         "start" | "run" => {
+            let invoke_live_cli = args.iter().any(|a| a == "--live-cli");
             refresh_provider_quotas(&mut state);
             let ws_root = detect_workspace_root();
             let mut busy = BTreeSet::new();
             let task_ids: Vec<String> = state.tasks.keys().cloned().collect();
 
             println!(
-                "\n{}{}⚡ Launching Parallel Multi-AI Swarm across FencedLease Git Worktrees...{}",
+                "\n{}{}⚡ Launching Parallel Multi-AI Swarm across FencedLease Git Worktrees (Windows Job Object Containment)...{}",
                 BOLD, GREEN, RESET
             );
             for tid in task_ids {
@@ -307,22 +310,91 @@ fn main() {
                         &task_snapshot.owned_files,
                         epoch,
                     );
-                    println!(
-                        "  {}-> Task [{}]{} (Epoch #{}, SPARC:{}) -> {}{}/{}{} ({}) │ Persona: {}{}{}",
-                        BRIGHT_CYAN,
-                        tid,
-                        RESET,
-                        epoch,
-                        task_snapshot.sparc_phase,
-                        BOLD,
-                        route.selected_provider,
-                        route.selected_model,
-                        RESET,
-                        badge_effort(&route.selected_effort),
-                        MAGENTA,
-                        route.assigned_persona,
-                        RESET
+
+                    // If a prior checkpoint exists from an interrupted writer, verify SHA-256 and transfer owned files
+                    let prior_cp = state.checkpoints.get(&tid).cloned();
+                    if let Some(ref cp) = prior_cp {
+                        let _ = transfer_checkpoint_to_receiver(cp, &lease, &ws_root, &task_snapshot.owned_files);
+                    }
+
+                    let persona_ctx = load_on_disk_persona_and_skill_context(&ws_root, &route.assigned_persona);
+                    let handoff_prompt = build_handoff_prompt(
+                        &task_snapshot.title,
+                        &task_snapshot.owned_files,
+                        &persona_ctx,
+                        prior_cp.as_ref(),
+                        is_rev,
                     );
+
+                    let wt_abs = ws_root.join(&lease.worktree_path);
+                    let mut active_procs_rem = 0u32;
+
+                    if invoke_live_cli {
+                        if let Some(prov) = state.providers.get(&route.selected_provider).cloned() {
+                            match execute_ai_cli(&prov, &route.selected_model, &route.selected_effort, &wt_abs, &handoff_prompt) {
+                                Ok((_, rem)) => active_procs_rem = rem,
+                                Err((kind, reset, _, rem)) => {
+                                    active_procs_rem = rem;
+                                    if let Some(pm) = state.providers.get_mut(&route.selected_provider) {
+                                        if kind == "quota" {
+                                            pm.status = "quota".into();
+                                            pm.retry_at = reset;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Ensure owned report file is materialized inside the fenced worktree for checkpoint sealing
+                        for rel in &task_snapshot.owned_files {
+                            let target = wt_abs.join(rel);
+                            if let Some(parent) = target.parent() {
+                                let _ = fs::create_dir_all(parent);
+                            }
+                            if !target.exists() {
+                                let _ = fs::write(
+                                    &target,
+                                    format!(
+                                        "# Task {} ({})\nRouted to {}/{} (effort={}, persona={}, epoch=#{})\n",
+                                        tid, task_snapshot.title, route.selected_provider, route.selected_model, route.selected_effort, route.assigned_persona, epoch
+                                    ),
+                                );
+                            }
+                        }
+                    }
+
+                    if let Ok(cp) = seal_checkpoint(
+                        &tid,
+                        epoch,
+                        &wt_abs,
+                        &task_snapshot.base_commit,
+                        &route.selected_provider,
+                        &route.selected_model,
+                        &route.selected_effort,
+                        &task_snapshot.owned_files,
+                        None,
+                        active_procs_rem,
+                    ) {
+                        println!(
+                            "  {}-> Task [{}]{} (Epoch #{}, SPARC:{}) -> {}{}/{}{} ({}) │ Persona: {}{}{} │ Checkpoint SHA-256 Sealed (procs_rem={})",
+                            BRIGHT_CYAN,
+                            tid,
+                            RESET,
+                            epoch,
+                            task_snapshot.sparc_phase,
+                            BOLD,
+                            route.selected_provider,
+                            route.selected_model,
+                            RESET,
+                            badge_effort(&route.selected_effort),
+                            MAGENTA,
+                            route.assigned_persona,
+                            RESET,
+                            cp.writer_processes_remaining
+                        );
+                        state.checkpoints.insert(tid.clone(), cp);
+                    }
+
                     state.fenced_leases.insert(tid.clone(), lease);
                     let top_exp = route
                         .moe_experts
@@ -340,8 +412,8 @@ fn main() {
                     append_ledger_row(
                         &mut state.decision_ledger,
                         &format!("{}/{}", route.selected_provider, route.selected_model),
-                        "swarm.dispatch.v4",
-                        &format!("Task {} dispatched in epoch #{} with persona {}", tid, epoch, route.assigned_persona),
+                        "swarm.dispatch.v5",
+                        &format!("Task {} sealed checkpoint in epoch #{} with persona {}", tid, epoch, route.assigned_persona),
                     );
                 }
             }
@@ -845,13 +917,13 @@ fn main() {
                         if let Some(p) = state.providers.get(&pid).cloned() {
                             let st = Instant::now();
                             match execute_ai_cli(&p, &model, &eff, &ws, &prompt) {
-                                Ok(out) => {
+                                Ok((out, _)) => {
                                     record_outcome(&mut state, &pid, &model, "coder", 0.98, st.elapsed().as_millis() as u64);
                                     save_fleet_state(&state);
                                     println!("{}", out);
                                     return;
                                 }
-                                Err((kind, reset, _)) => {
+                                Err((kind, reset, _, _)) => {
                                     if let Some(pm) = state.providers.get_mut(&pid) {
                                         if kind == "quota" {
                                             pm.status = "quota".into();

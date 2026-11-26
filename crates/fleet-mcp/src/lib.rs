@@ -26,10 +26,10 @@ pub struct McpToolSpec {
 }
 
 pub fn list_mcp_tools() -> Vec<McpToolSpec> {
-    let raw = [
+    let mut tools = vec![
         ("fleet_swarm_status", "swarm", "Return full multi-AI swarm topology, quotas, active leases, and ledger health"),
-        ("fleet_agent_catalog", "agents", "List or query the 64 specialized agent personas across 8 domains"),
-        ("fleet_plugin_catalog", "plugins", "List or discover from the 48 built-in enterprise plugins"),
+        ("fleet_agent_catalog", "agents", "List or query the 64 specialized agent personas + 108 on-disk agent specs"),
+        ("fleet_plugin_catalog", "plugins", "List or discover from the 48 built-in enterprise plugins (405 tools)"),
         ("fleet_route_moe", "neural", "Run 2-Layer 8-Expert MoE + Pheromone + SONA/EWC routing for a task"),
         ("fleet_queen_decompose", "swarm", "Decompose a complex task into persona-assigned DAG sub-tasks"),
         ("fleet_memory_store", "memory", "Index a key-value document into the 64-dim HNSW semantic vector graph"),
@@ -42,14 +42,35 @@ pub fn list_mcp_tools() -> Vec<McpToolSpec> {
         ("fleet_hook_eval", "hooks", "Evaluate PreToolUse, PostToolUse, SessionStart, or Stop lifecycle hook"),
         ("fleet_compress_message", "neural", "Compress inter-agent handoff message to target token budget (Information Bottleneck)"),
         ("fleet_federation_send", "federation", "Strip PII/secrets and embed Gumbel-Softmax watermark for cross-team federation"),
-    ];
-    raw.iter()
-        .map(|(n, c, d)| McpToolSpec {
-            name: (*n).to_string(),
-            category: (*c).to_string(),
-            description: (*d).to_string(),
-        })
-        .collect()
+    ]
+    .into_iter()
+    .map(|(n, c, d)| McpToolSpec {
+        name: n.to_string(),
+        category: c.to_string(),
+        description: d.to_string(),
+    })
+    .collect::<Vec<_>>();
+
+    // Dynamically load the 314 Ruflo V3 baseline MCP tools if verification/mcp-tool-baseline.json is present
+    let ws = detect_workspace_root();
+    let baseline_path = ws.join("verification/mcp-tool-baseline.json");
+    if let Ok(raw_json) = std::fs::read_to_string(&baseline_path) {
+        if let Ok(val) = serde_json::from_str::<Value>(&raw_json) {
+            if let Some(arr) = val.get("tools").and_then(|t| t.as_array()) {
+                for item in arr {
+                    if let Some(name) = item.as_str().or_else(|| item.get("name").and_then(|n| n.as_str())) {
+                        let cat = name.split('_').next().unwrap_or("ruflo").to_string();
+                        tools.push(McpToolSpec {
+                            name: name.to_string(),
+                            category: cat,
+                            description: "Ruflo V3 baseline MCP tool bridged natively by AI-Fleet Rust engine".to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+    tools
 }
 
 pub fn execute_mcp_tool(tool_name: &str, params: &Value) -> Value {
